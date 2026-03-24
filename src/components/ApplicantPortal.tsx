@@ -182,6 +182,13 @@ function ApplyFlow() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Company header */}
+      <header className="bg-[#0d0c2c] text-white py-4 px-6 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-md bg-[#FFD200] flex items-center justify-center">
+          <span className="text-[#0d0c2c] font-bold text-sm">U</span>
+        </div>
+        <span className="font-semibold">{config?.companyName || 'Urgent Couriers'}</span>
+      </header>
       <StepIndicator steps={portalSteps.map(s => ({ key: `step-${s.id}`, label: s.title }))} current={step} />
 
       <div className="max-w-2xl mx-auto py-8 px-4">
@@ -381,7 +388,12 @@ function StatusCheck() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#0d0c2c] text-white py-6 px-8 flex items-center gap-4" />
+      <header className="bg-[#0d0c2c] text-white py-4 px-6 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-md bg-[#FFD200] flex items-center justify-center">
+          <span className="text-[#0d0c2c] font-bold text-sm">U</span>
+        </div>
+        <span className="font-semibold">Urgent Couriers</span>
+      </header>
       <div className="max-w-xl mx-auto py-8 px-4">
         <h2 className="text-xl font-semibold mb-4">Check Application Status</h2>
         <div className="flex gap-2 mb-6">
@@ -439,6 +451,12 @@ function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <header className="bg-[#0d0c2c] text-white py-4 px-6 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-md bg-[#FFD200] flex items-center justify-center">
+          <span className="text-[#0d0c2c] font-bold text-sm">U</span>
+        </div>
+        <span className="font-semibold">{config?.companyName || 'Urgent Couriers'}</span>
+      </header>
       <div className="max-w-2xl mx-auto py-8 px-4">
         <div className="bg-[#0d0c2c] rounded-2xl p-8 mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">{config?.welcomeTitle || 'Join Our Team'}</h1>
