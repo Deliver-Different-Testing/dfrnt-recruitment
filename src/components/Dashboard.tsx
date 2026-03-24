@@ -1,105 +1,99 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import * as api from '../lib/api'
-import { Users, FileCheck, Clock, ArrowRight, TrendingUp } from 'lucide-react'
-
-const STAGES = ['Applied', 'Screening', 'Interview', 'DocumentCheck', 'QuizPending', 'Approved', 'Rejected']
-const stageColors: Record<string, string> = {
-  Applied: '#3b82f6', Screening: '#eab308', Interview: '#a855f7',
-  DocumentCheck: '#f97316', QuizPending: '#6366f1', Approved: '#22c55e', Rejected: '#ef4444',
-}
+import { Users, FileCheck, ClipboardList, TrendingUp, ArrowRight } from 'lucide-react'
 
 export default function Dashboard() {
-  const [applicants, setApplicants] = useState<api.Applicant[]>([])
-  const [pendingDocs, setPendingDocs] = useState(0)
+  const [pipeline, setPipeline] = useState<Record<string, api.Applicant[]>>({})
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   useEffect(() => {
-    Promise.all([api.getApplicants()]).then(([apps]) => {
-      setApplicants(apps)
-      // Count pending docs across all applicants
-      let pending = 0
-      const docPromises = apps.slice(0, 50).map(a =>
-        api.getApplicantDocuments(a.id).then(docs => {
-          pending += docs.filter(d => d.status === 'Pending').length
-        }).catch(() => {})
-      )
-      Promise.all(docPromises).then(() => setPendingDocs(pending))
-      setLoading(false)
-    })
+    api.getPipeline().then(p => { setPipeline(p); setLoading(false) })
   }, [])
 
-  const stageCounts = STAGES.reduce((acc, s) => {
-    acc[s] = applicants.filter(a => a.status === s).length
-    return acc
-  }, {} as Record<string, number>)
-
-  const thisWeek = applicants.filter(a => {
+  const all = Object.values(pipeline).flat()
+  const thisWeek = all.filter(a => {
     const d = new Date(a.appliedDate)
     const now = new Date()
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     return d >= weekAgo
   })
 
-  const recent = applicants.slice(0, 5)
-  const maxCount = Math.max(...Object.values(stageCounts), 1)
+  const stages = ['Applied', 'Screening', 'Interview', 'DocumentCheck', 'QuizPending', 'Approved', 'Rejected']
+  const stageLabels: Record<string, string> = {
+    Applied: 'Applied', Screening: 'Screening', Interview: 'Interview',
+    DocumentCheck: 'Doc Check', QuizPending: 'Quiz', Approved: 'Approved', Rejected: 'Rejected'
+  }
+  const stageColors: Record<string, string> = {
+    Applied: 'bg-blue-500', Screening: 'bg-yellow-500', Interview: 'bg-purple-500',
+    DocumentCheck: 'bg-orange-500', QuizPending: 'bg-indigo-500', Approved: 'bg-green-500', Rejected: 'bg-red-400'
+  }
+  const maxStage = Math.max(...stages.map(s => (pipeline[s] || []).length), 1)
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="text-gray-400">Loading...</div></div>
+  if (loading) return <div className="flex items-center justify-center h-64 text-gray-400">Loading...</div>
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-[#0d0c2c] mb-6">Dashboard</h1>
 
-      {/* Stats Cards */}
+      {/* Stat Cards */}
       <div className="grid grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-50 rounded-lg"><Users size={20} className="text-blue-600" /></div>
-            <span className="text-sm text-gray-500">Total Applicants</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center"><Users size={20} className="text-blue-600" /></div>
+            <div>
+              <p className="text-2xl font-bold">{all.length}</p>
+              <p className="text-sm text-gray-500">Total Applicants</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-[#0d0c2c]">{applicants.length}</p>
         </div>
         <div className="bg-white rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-green-50 rounded-lg"><TrendingUp size={20} className="text-green-600" /></div>
-            <span className="text-sm text-gray-500">This Week</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center"><TrendingUp size={20} className="text-green-600" /></div>
+            <div>
+              <p className="text-2xl font-bold">{thisWeek.length}</p>
+              <p className="text-sm text-gray-500">This Week</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-[#0d0c2c]">{thisWeek.length}</p>
         </div>
         <div className="bg-white rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-orange-50 rounded-lg"><FileCheck size={20} className="text-orange-600" /></div>
-            <span className="text-sm text-gray-500">Docs to Review</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center"><FileCheck size={20} className="text-orange-600" /></div>
+            <div>
+              <p className="text-2xl font-bold">{(pipeline['DocumentCheck'] || []).length}</p>
+              <p className="text-sm text-gray-500">Docs to Review</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-[#0d0c2c]">{pendingDocs}</p>
         </div>
         <div className="bg-white rounded-xl p-5 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-purple-50 rounded-lg"><Clock size={20} className="text-purple-600" /></div>
-            <span className="text-sm text-gray-500">Approved</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center"><ClipboardList size={20} className="text-purple-600" /></div>
+            <div>
+              <p className="text-2xl font-bold">{(pipeline['Interview'] || []).length}</p>
+              <p className="text-sm text-gray-500">In Interview</p>
+            </div>
           </div>
-          <p className="text-3xl font-bold text-[#0d0c2c]">{stageCounts['Approved'] || 0}</p>
         </div>
       </div>
 
-      {/* Pipeline Stage Bars */}
+      {/* Pipeline Funnel */}
       <div className="bg-white rounded-xl p-6 shadow-sm mb-8">
-        <h2 className="font-semibold text-lg mb-4">Pipeline Overview</h2>
+        <h2 className="font-semibold mb-4">Pipeline Overview</h2>
         <div className="space-y-3">
-          {STAGES.map(stage => (
-            <div key={stage} className="flex items-center gap-4">
-              <span className="text-sm w-32 text-gray-600">{stage}</span>
-              <div className="flex-1 bg-gray-100 rounded-full h-8 relative overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500 flex items-center px-3"
-                  style={{ width: `${Math.max((stageCounts[stage] / maxCount) * 100, stageCounts[stage] > 0 ? 8 : 0)}%`, backgroundColor: stageColors[stage] }}
-                >
-                  {stageCounts[stage] > 0 && <span className="text-white text-xs font-semibold">{stageCounts[stage]}</span>}
+          {stages.filter(s => s !== 'Rejected').map(stage => {
+            const count = (pipeline[stage] || []).length
+            const pct = (count / maxStage) * 100
+            return (
+              <div key={stage} className="flex items-center gap-3">
+                <span className="text-sm w-20 text-gray-600">{stageLabels[stage]}</span>
+                <div className="flex-1 bg-gray-100 rounded-full h-7 relative overflow-hidden">
+                  <div className={`h-full rounded-full ${stageColors[stage]} transition-all`} style={{ width: `${Math.max(pct, 2)}%` }} />
+                  <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-gray-700">{count}</span>
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
@@ -107,43 +101,41 @@ export default function Dashboard() {
         {/* Recent Applications */}
         <div className="bg-white rounded-xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg">Recent Applications</h2>
-            <button onClick={() => navigate('/admin/pipeline')} className="text-[#3bc7f4] text-sm flex items-center gap-1 hover:underline">
+            <h2 className="font-semibold">Recent Applications</h2>
+            <button onClick={() => navigate('/admin/pipeline')} className="text-sm text-[#E87C1E] hover:underline flex items-center gap-1">
               View all <ArrowRight size={14} />
             </button>
           </div>
-          <div className="space-y-3">
-            {recent.map(a => (
-              <div key={a.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <div>
-                  <p className="font-medium text-sm">{a.firstName} {a.lastName}</p>
-                  <p className="text-xs text-gray-500">{a.email}</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs px-2 py-1 rounded-full bg-gray-100">{a.status}</span>
-                  <p className="text-xs text-gray-400 mt-1">{new Date(a.appliedDate).toLocaleDateString()}</p>
-                </div>
+          {all.slice(0, 5).map(a => (
+            <div key={a.id} className="flex items-center justify-between py-2 border-b last:border-0">
+              <div>
+                <p className="font-medium text-sm">{a.firstName} {a.lastName}</p>
+                <p className="text-xs text-gray-500">{a.email}</p>
               </div>
-            ))}
-            {recent.length === 0 && <p className="text-sm text-gray-400">No applications yet</p>}
-          </div>
+              <span className="text-xs text-gray-400">{new Date(a.appliedDate).toLocaleDateString('en-NZ')}</span>
+            </div>
+          ))}
+          {all.length === 0 && <p className="text-sm text-gray-400 text-center py-4">No applications yet</p>}
         </div>
 
         {/* Quick Actions */}
         <div className="bg-white rounded-xl p-6 shadow-sm">
-          <h2 className="font-semibold text-lg mb-4">Quick Actions</h2>
+          <h2 className="font-semibold mb-4">Quick Actions</h2>
           <div className="space-y-3">
-            <button onClick={() => navigate('/admin/pipeline')} className="w-full text-left p-4 rounded-lg border border-gray-100 hover:border-[#3bc7f4] hover:bg-[#3bc7f4]/5 transition-colors">
-              <p className="font-medium text-sm">View Pipeline</p>
-              <p className="text-xs text-gray-500">Manage applicants through stages</p>
+            <button onClick={() => navigate('/admin/pipeline')}
+              className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+              <Users size={20} className="text-[#E87C1E]" />
+              <span className="font-medium text-sm">View Pipeline</span>
             </button>
-            <button onClick={() => navigate('/admin/documents')} className="w-full text-left p-4 rounded-lg border border-gray-100 hover:border-[#3bc7f4] hover:bg-[#3bc7f4]/5 transition-colors">
-              <p className="font-medium text-sm">Review Documents</p>
-              <p className="text-xs text-gray-500">{pendingDocs} pending reviews</p>
+            <button onClick={() => navigate('/admin/documents')}
+              className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+              <FileCheck size={20} className="text-[#E87C1E]" />
+              <span className="font-medium text-sm">Review Documents</span>
             </button>
-            <button onClick={() => navigate('/admin/quizzes')} className="w-full text-left p-4 rounded-lg border border-gray-100 hover:border-[#3bc7f4] hover:bg-[#3bc7f4]/5 transition-colors">
-              <p className="font-medium text-sm">Quiz Builder</p>
-              <p className="text-xs text-gray-500">Create and manage quizzes</p>
+            <button onClick={() => navigate('/admin/quizzes')}
+              className="w-full flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 transition-colors">
+              <ClipboardList size={20} className="text-[#E87C1E]" />
+              <span className="font-medium text-sm">Manage Quizzes</span>
             </button>
           </div>
         </div>

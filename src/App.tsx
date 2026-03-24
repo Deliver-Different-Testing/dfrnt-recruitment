@@ -4,6 +4,7 @@ import ApplicantPortal from './components/ApplicantPortal'
 import RecruitmentPipeline from './components/RecruitmentPipeline'
 import DocumentManagement from './components/DocumentManagement'
 import QuizBuilder from './components/QuizBuilder'
+import Dashboard from './components/Dashboard'
 import { useStore } from './store'
 import { useState } from 'react'
 import * as api from './lib/api'
@@ -25,11 +26,11 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0d0c2c]">
       <form onSubmit={handleLogin} className="bg-white p-8 rounded-xl shadow-lg w-96">
-        <img src="/urgent-logo.png" alt="Urgent Couriers" className="h-12 mb-6 mx-auto" />
+        <h1 className="text-2xl font-bold mb-6 text-[#0d0c2c]">DFRNT Admin</h1>
         {error && <p className="text-red-500 mb-4 text-sm">{error}</p>}
         <input className="w-full border rounded-lg p-3 mb-4" placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} />
         <input className="w-full border rounded-lg p-3 mb-4" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-        <button className="w-full bg-[#FFD200] text-[#0d0c2c] py-3 rounded-lg font-semibold hover:bg-[#E87C1E]">Login</button>
+        <button className="w-full bg-[#3bc7f4] text-white py-3 rounded-lg font-semibold hover:bg-[#2ab0dd]">Login</button>
       </form>
     </div>
   )
@@ -43,7 +44,8 @@ export default function App() {
       <Route path="/apply/*" element={<ApplicantPortal />} />
       <Route path="/admin/login" element={<LoginPage />} />
       <Route path="/admin" element={isAdmin ? <Layout /> : <Navigate to="/admin/login" />}>
-        <Route index element={<Navigate to="pipeline" />} />
+        <Route index element={<Navigate to="dashboard" />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="pipeline" element={<RecruitmentPipeline />} />
         <Route path="documents" element={<DocumentManagement />} />
         <Route path="quizzes" element={<QuizBuilder />} />
