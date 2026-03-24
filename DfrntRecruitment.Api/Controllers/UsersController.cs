@@ -84,6 +84,18 @@ public class UsersController(AppDbContext db) : ControllerBase
         return Ok(new { user.Id, user.Username, user.Email, user.DisplayName, user.Role, user.IsActive, user.CreatedDate });
     }
 
+    [HttpPost("{id}/reset-link")]
+    public async Task<IActionResult> GenerateResetLink(int id)
+    {
+        var user = await db.AdminUsers.FindAsync(id);
+        if (user is null) return NotFound();
+        user.ResetToken = Guid.NewGuid().ToString("N");
+        user.ResetExpiry = DateTime.UtcNow.AddDays(7);
+        await db.SaveChangesAsync();
+        var baseUrl = $"{Request.Scheme}://{Request.Host}";
+        return Ok(new { resetLink = $"{baseUrl}/admin/reset-password?token={user.ResetToken}" });
+    }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

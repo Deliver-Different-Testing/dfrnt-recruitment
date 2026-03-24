@@ -121,6 +121,8 @@ export const createUser = (data: {username: string; email: string; password: str
 export const updateUser = (id: number, data: Partial<AdminUserInfo>) => request<AdminUserInfo>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteUser = (id: number) => request<void>(`/users/${id}`, { method: 'DELETE' });
 export const inviteUser = (data: {email: string; displayName?: string; role?: string}) => request<{user: AdminUserInfo; inviteLink: string}>('/users/invite', { method: 'POST', body: JSON.stringify(data) });
+
+export const generateResetLink = (id: number) => request<{resetLink: string}>(`/users/${id}/reset-link`, { method: 'POST' });
 export const setupPassword = (token: string, password: string) => request<{success: boolean}>('/users/setup-password', { method: 'POST', body: JSON.stringify({ token, password }) });
 
 // Document Scan API

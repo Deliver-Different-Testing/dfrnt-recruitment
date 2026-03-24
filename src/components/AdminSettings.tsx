@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import * as api from '../lib/api'
-import { Plus, Users, Eye, EyeOff, Copy, CheckCircle, Link } from 'lucide-react'
+import { Plus, Users, Eye, EyeOff, Copy, CheckCircle, Link, KeyRound } from 'lucide-react'
 
 export default function AdminSettings() {
   const [users, setUsers] = useState<api.AdminUserInfo[]>([])
@@ -9,6 +9,8 @@ export default function AdminSettings() {
   const [inviting, setInviting] = useState(false)
   const [inviteLink, setInviteLink] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [resetLink, setResetLink] = useState<{ userId: number; link: string } | null>(null)
+  const [resetCopied, setResetCopied] = useState(false)
 
   useEffect(() => { api.getUsers().then(setUsers).catch(() => {}) }, [])
 
@@ -42,6 +44,22 @@ export default function AdminSettings() {
       const updated = await api.updateUser(user.id, { isActive: !user.isActive })
       setUsers(users.map(u => u.id === user.id ? updated : u))
     } catch { alert('Error updating user') }
+  }
+
+  const handleResetLink = async (user: api.AdminUserInfo) => {
+    try {
+      const result = await api.generateResetLink(user.id)
+      setResetLink({ userId: user.id, link: result.resetLink })
+      setResetCopied(false)
+    } catch { alert('Error generating reset link') }
+  }
+
+  const copyResetLink = () => {
+    if (resetLink) {
+      navigator.clipboard.writeText(resetLink.link)
+      setResetCopied(true)
+      setTimeout(() => setResetCopied(false), 3000)
+    }
   }
 
   const changeRole = async (user: api.AdminUserInfo, role: string) => {
@@ -174,10 +192,28 @@ export default function AdminSettings() {
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${status.color}`}>{status.label}</span>
                   </td>
                   <td className="p-4 text-right">
-                    <button onClick={() => toggleActive(user)}
-                      className="text-gray-400 hover:text-[#0d0c2c] p-1" title={user.isActive ? 'Deactivate' : 'Activate'}>
-                      {user.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => handleResetLink(user)}
+                        className="text-gray-400 hover:text-[#E87C1E] p-1" title="Generate password reset link">
+                        <KeyRound size={16} />
+                      </button>
+                      <button onClick={() => toggleActive(user)}
+                        className="text-gray-400 hover:text-[#0d0c2c] p-1" title={user.isActive ? 'Deactivate' : 'Activate'}>
+                        {user.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {resetLink?.userId === user.id && (
+                      <div className="mt-2 flex items-center gap-1 bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+                        <input className="flex-1 text-xs text-gray-600 bg-transparent outline-none min-w-0" readOnly value={resetLink.link} />
+                        <button onClick={copyResetLink}
+                          className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                            resetCopied ? 'bg-green-100 text-green-700' : 'bg-[#FFD200] text-[#0d0c2c] hover:bg-[#E87C1E] hover:text-white'
+                          }`}>
+                          {resetCopied ? <><CheckCircle size={12} /> Copied</> : <><Copy size={12} /> Copy</>}
+                        </button>
+                        <button onClick={() => setResetLink(null)} className="text-gray-400 hover:text-gray-600 text-xs px-1">✕</button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               )
