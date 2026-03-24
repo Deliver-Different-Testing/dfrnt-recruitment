@@ -1,0 +1,45 @@
+import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { useStore } from '../store'
+import { Users, FileText, HelpCircle, LogOut, LayoutDashboard } from 'lucide-react'
+
+const navItems = [
+  { to: '/admin/pipeline', label: 'Pipeline', icon: LayoutDashboard },
+  { to: '/admin/documents', label: 'Documents', icon: FileText },
+  { to: '/admin/quizzes', label: 'Quizzes', icon: HelpCircle },
+]
+
+export default function Layout() {
+  const logout = useStore(s => s.logout)
+  const navigate = useNavigate()
+
+  return (
+    <div className="flex h-screen">
+      <aside className="w-64 bg-[#0d0c2c] text-white flex flex-col">
+        <div className="p-6">
+          <h1 className="text-xl font-bold text-[#3bc7f4]">DFRNT</h1>
+          <p className="text-sm text-gray-400 mt-1">Recruitment Portal</p>
+        </div>
+        <nav className="flex-1 px-4">
+          {navItems.map(item => (
+            <NavLink key={item.to} to={item.to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive ? 'bg-[#3bc7f4]/20 text-[#3bc7f4]' : 'text-gray-300 hover:bg-white/5'}`
+              }>
+              <item.icon size={20} />
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+        <div className="p-4 border-t border-white/10">
+          <button onClick={() => { logout(); navigate('/admin/login'); }}
+            className="flex items-center gap-3 text-gray-400 hover:text-white w-full px-4 py-2">
+            <LogOut size={20} /> Sign Out
+          </button>
+        </div>
+      </aside>
+      <main className="flex-1 overflow-auto p-8 bg-gray-50">
+        <Outlet />
+      </main>
+    </div>
+  )
+}

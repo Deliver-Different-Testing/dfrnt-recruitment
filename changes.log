@@ -1,0 +1,11 @@
+# Changes Log
+
+## 2026-03-23 — Initial Scaffold
+- Created .NET 10 API with EF Core + Npgsql (PostgreSQL)
+- Entities: Applicant, ApplicantDocument, DocumentType, RecruitmentStage, RecruitmentNote, Quiz, QuizQuestion, QuizAttempt, QuizAnswer, TenantSettings
+- Controllers: Auth, Applicant, Recruitment, Document, Quiz
+- React 19 + Vite 6 + Tailwind 4 + Zustand frontend
+- Multi-step applicant portal with status check
+- Admin panel with pipeline (kanban/list), document management, quiz builder
+- Dockerfile for Railway deployment (multi-stage .NET + Node build)
+- PostgreSQL via Railway DATABASE_URL
