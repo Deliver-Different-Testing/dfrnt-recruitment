@@ -7,6 +7,7 @@ import QuizBuilder from './components/QuizBuilder'
 import Dashboard from './components/Dashboard'
 import FlowBuilder from './components/FlowBuilder'
 import AdminSettings from './components/AdminSettings'
+import SetupPassword from './components/SetupPassword'
 import { useStore } from './store'
 import { useState } from 'react'
 import * as api from './lib/api'
@@ -51,6 +52,7 @@ export default function App() {
     <Routes>
       <Route path="/apply/*" element={<ApplicantPortal />} />
       <Route path="/admin/login" element={<LoginPage />} />
+      <Route path="/admin/setup-password" element={<SetupPassword />} />
       <Route path="/admin" element={isAdmin ? <Layout /> : <Navigate to="/admin/login" />}>
         <Route index element={<Navigate to="dashboard" />} />
         <Route path="dashboard" element={<Dashboard />} />
