@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import ApplicantPortal from './components/ApplicantPortal'
 import RecruitmentPipeline from './components/RecruitmentPipeline'
@@ -15,12 +15,19 @@ function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const setAuth = useStore(s => s.setAuth)
+  const isAdmin = useStore(s => s.isAdmin)
+  const navigate = useNavigate()
+
+  // Already logged in — redirect
+  if (isAdmin) return <Navigate to="/admin/dashboard" />
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     try {
       const res = await api.login(username, password)
       setAuth(res.token)
+      navigate('/admin/dashboard')
     } catch { setError('Invalid credentials') }
   }
 
