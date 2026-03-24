@@ -49,12 +49,12 @@ try
     if (!db.DocumentTypes.Any())
     {
         db.DocumentTypes.AddRange(
-            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Driver's Licence", Description = "Current NZ driver's licence (front and back)", IsRequired = true, AppliesTo = "Applicant", ValidityMonths = 60, SortOrder = 1, IsActive = true },
-            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Vehicle Registration", Description = "Current vehicle registration certificate", IsRequired = true, AppliesTo = "Applicant", ValidityMonths = 12, SortOrder = 2, IsActive = true },
-            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Vehicle Insurance", Description = "Comprehensive or third-party vehicle insurance", IsRequired = true, AppliesTo = "Applicant", ValidityMonths = 12, SortOrder = 3, IsActive = true },
-            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Proof of Address", Description = "Utility bill or bank statement (within last 3 months)", IsRequired = false, AppliesTo = "Applicant", SortOrder = 4, IsActive = true },
-            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Passport or NZ ID", Description = "Valid photo ID for identity verification", IsRequired = false, AppliesTo = "Applicant", SortOrder = 5, IsActive = true },
-            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "WOF Certificate", Description = "Current Warrant of Fitness", IsRequired = true, AppliesTo = "Applicant", ValidityMonths = 6, SortOrder = 6, IsActive = true }
+            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Driver's Licence", Description = "Current NZ driver's licence (front and back)", IsRequired = true, AppliesTo = DfrntRecruitment.Api.Core.Domain.Entities.AppliesTo.Applicant, ValidityMonths = 60, SortOrder = 1, IsActive = true },
+            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Vehicle Registration", Description = "Current vehicle registration certificate", IsRequired = true, AppliesTo = DfrntRecruitment.Api.Core.Domain.Entities.AppliesTo.Applicant, ValidityMonths = 12, SortOrder = 2, IsActive = true },
+            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Vehicle Insurance", Description = "Comprehensive or third-party vehicle insurance", IsRequired = true, AppliesTo = DfrntRecruitment.Api.Core.Domain.Entities.AppliesTo.Applicant, ValidityMonths = 12, SortOrder = 3, IsActive = true },
+            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Proof of Address", Description = "Utility bill or bank statement (within last 3 months)", IsRequired = false, AppliesTo = DfrntRecruitment.Api.Core.Domain.Entities.AppliesTo.Applicant, SortOrder = 4, IsActive = true },
+            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "Passport or NZ ID", Description = "Valid photo ID for identity verification", IsRequired = false, AppliesTo = DfrntRecruitment.Api.Core.Domain.Entities.AppliesTo.Applicant, SortOrder = 5, IsActive = true },
+            new DfrntRecruitment.Api.Core.Domain.Entities.DocumentType { Name = "WOF Certificate", Description = "Current Warrant of Fitness", IsRequired = true, AppliesTo = DfrntRecruitment.Api.Core.Domain.Entities.AppliesTo.Applicant, ValidityMonths = 6, SortOrder = 6, IsActive = true }
         );
         db.SaveChanges();
         Log.Information("Seeded default document types");
