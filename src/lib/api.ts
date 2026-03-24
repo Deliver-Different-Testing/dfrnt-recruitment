@@ -48,6 +48,16 @@ export const login = (username: string, password: string) =>
     method: 'POST', body: JSON.stringify({ username, password }),
   });
 
+export const forgotPassword = (email: string) =>
+  request<{ message: string }>('/auth/forgot-password', {
+    method: 'POST', body: JSON.stringify({ email }),
+  });
+
+export const resetPassword = (token: string, newPassword: string) =>
+  request<{ message: string }>('/auth/reset-password', {
+    method: 'POST', body: JSON.stringify({ token, newPassword }),
+  });
+
 // Applicants
 export const getApplicants = () => request<Applicant[]>('/applicant');
 export const getApplicant = (id: number) => request<Applicant>(`/applicant/${id}`);
