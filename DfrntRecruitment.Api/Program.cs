@@ -38,10 +38,16 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Auto-migrate
-using (var scope = app.Services.CreateScope())
+try
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+    Log.Information("Database migration completed successfully");
+}
+catch (Exception ex)
+{
+    Log.Error(ex, "Database migration failed — app will start without DB");
 }
 
 app.UseMiddleware<ErrorHandlingMiddleware>();
