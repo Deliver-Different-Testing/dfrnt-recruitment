@@ -25,16 +25,18 @@ function ApplyFlow() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#0d0c2c] text-white py-6 px-8">
-        <h1 className="text-2xl font-bold text-[#3bc7f4]">DFRNT Recruitment</h1>
-        <p className="text-gray-400 mt-1">Join our courier team</p>
+      <header className="bg-[#0d0c2c] text-white py-6 px-8 flex items-center gap-4">
+        <img src="/urgent-logo.png" alt="Urgent Couriers" className="h-14" />
+        <div>
+          <p className="text-gray-400 mt-1">Join our delivery team</p>
+        </div>
       </header>
 
       <div className="max-w-2xl mx-auto py-8 px-4">
         {/* Step indicator */}
         <div className="flex gap-2 mb-8">
           {steps.map((s, i) => (
-            <div key={s} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-[#3bc7f4]' : 'bg-gray-200'}`} />
+            <div key={s} className={`flex-1 h-2 rounded-full ${i <= step ? 'bg-[#FFD200]' : 'bg-gray-200'}`} />
           ))}
         </div>
         <h2 className="text-xl font-semibold mb-6">{steps[step]}</h2>
@@ -61,7 +63,7 @@ function ApplyFlow() {
               <option value="other">Other</option>
             </select>
             <button onClick={() => setStep(1)} disabled={!form.firstName || !form.lastName || !form.email}
-              className="w-full bg-[#3bc7f4] text-white py-3 rounded-lg font-semibold hover:bg-[#2ab0dd] disabled:opacity-50">Next</button>
+              className="w-full bg-[#FFD200] text-[#0d0c2c] py-3 rounded-lg font-semibold hover:bg-[#E87C1E] disabled:opacity-50">Next</button>
           </div>
         )}
 
@@ -84,7 +86,7 @@ function ApplyFlow() {
             <input className="w-full border rounded-lg p-3" type="date" value={form.licenseExpiry} onChange={e => update('licenseExpiry', e.target.value)} />
             <div className="flex gap-4">
               <button onClick={() => setStep(0)} className="flex-1 border border-gray-300 py-3 rounded-lg">Back</button>
-              <button onClick={() => setStep(2)} className="flex-1 bg-[#3bc7f4] text-white py-3 rounded-lg font-semibold hover:bg-[#2ab0dd]">Next</button>
+              <button onClick={() => setStep(2)} className="flex-1 bg-[#FFD200] text-[#0d0c2c] py-3 rounded-lg font-semibold hover:bg-[#E87C1E]">Next</button>
             </div>
           </div>
         )}
@@ -94,7 +96,7 @@ function ApplyFlow() {
             <p className="text-gray-600">Document uploads will be available after your application is submitted. You can upload required documents from your status page.</p>
             <div className="flex gap-4">
               <button onClick={() => setStep(1)} className="flex-1 border border-gray-300 py-3 rounded-lg">Back</button>
-              <button onClick={() => setStep(3)} className="flex-1 bg-[#3bc7f4] text-white py-3 rounded-lg font-semibold hover:bg-[#2ab0dd]">Next</button>
+              <button onClick={() => setStep(3)} className="flex-1 bg-[#FFD200] text-[#0d0c2c] py-3 rounded-lg font-semibold hover:bg-[#E87C1E]">Next</button>
             </div>
           </div>
         )}
@@ -104,7 +106,7 @@ function ApplyFlow() {
             <p className="text-gray-600">If a quiz is required, you'll be able to take it from your status page after submitting your application.</p>
             <div className="flex gap-4">
               <button onClick={() => setStep(2)} className="flex-1 border border-gray-300 py-3 rounded-lg">Back</button>
-              <button onClick={handleSubmitApplication} className="flex-1 bg-[#3bc7f4] text-white py-3 rounded-lg font-semibold hover:bg-[#2ab0dd]">Submit Application</button>
+              <button onClick={handleSubmitApplication} className="flex-1 bg-[#FFD200] text-[#0d0c2c] py-3 rounded-lg font-semibold hover:bg-[#E87C1E]">Submit Application</button>
             </div>
           </div>
         )}
@@ -114,7 +116,7 @@ function ApplyFlow() {
             <div className="text-6xl mb-4">✅</div>
             <h3 className="text-2xl font-bold mb-2">Application Submitted!</h3>
             <p className="text-gray-600 mb-6">Thank you, {form.firstName}. We'll review your application and get back to you soon.</p>
-            <p className="text-sm text-gray-500">Check your status anytime at <a href={`/apply/status/${form.email}`} className="text-[#3bc7f4] underline">/apply/status</a></p>
+            <p className="text-sm text-gray-500">Check your status anytime at <a href={`/apply/status/${form.email}`} className="text-[#FFD200] underline">/apply/status</a></p>
           </div>
         )}
       </div>
@@ -138,20 +140,20 @@ function StatusCheck() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#0d0c2c] text-white py-6 px-8">
-        <h1 className="text-2xl font-bold text-[#3bc7f4]">DFRNT Recruitment</h1>
+        <img src="/urgent-logo.png" alt="Urgent Couriers" className="h-14" />
       </header>
       <div className="max-w-xl mx-auto py-8 px-4">
         <h2 className="text-xl font-semibold mb-4">Check Application Status</h2>
         <div className="flex gap-2 mb-6">
           <input className="flex-1 border rounded-lg p-3" placeholder="Your email address" value={email} onChange={e => setEmail(e.target.value)} />
-          <button onClick={check} className="bg-[#3bc7f4] text-white px-6 rounded-lg font-semibold">Check</button>
+          <button onClick={check} className="bg-[#FFD200] text-[#0d0c2c] px-6 rounded-lg font-semibold">Check</button>
         </div>
         {error && <p className="text-red-500">{error}</p>}
         {applicant && (
           <div className="bg-white rounded-xl p-6 shadow">
             <h3 className="font-bold text-lg">{applicant.firstName} {applicant.lastName}</h3>
             <p className="text-gray-600">{applicant.email}</p>
-            <div className="mt-4 inline-block px-4 py-2 rounded-full text-sm font-semibold bg-[#3bc7f4]/10 text-[#3bc7f4]">
+            <div className="mt-4 inline-block px-4 py-2 rounded-full text-sm font-semibold bg-[#FFD200]/10 text-[#FFD200]">
               Status: {applicant.status}
             </div>
             <p className="text-sm text-gray-500 mt-2">Applied: {new Date(applicant.appliedDate).toLocaleDateString()}</p>

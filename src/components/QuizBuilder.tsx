@@ -33,7 +33,7 @@ export default function QuizBuilder() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-[#0d0c2c]">Quiz Builder</h1>
-        <button onClick={() => setShowNew(true)} className="flex items-center gap-2 bg-[#3bc7f4] text-white px-4 py-2 rounded-lg">
+        <button onClick={() => setShowNew(true)} className="flex items-center gap-2 bg-[#FFD200] text-[#0d0c2c] px-4 py-2 rounded-lg">
           <Plus size={18} /> New Quiz
         </button>
       </div>
@@ -51,7 +51,7 @@ export default function QuizBuilder() {
             </label>
           </div>
           <div className="flex gap-2 mt-4">
-            <button onClick={handleCreateQuiz} className="bg-[#3bc7f4] text-white px-6 py-2 rounded-lg"><Save size={16} className="inline mr-2" />Create</button>
+            <button onClick={handleCreateQuiz} className="bg-[#FFD200] text-[#0d0c2c] px-6 py-2 rounded-lg"><Save size={16} className="inline mr-2" />Create</button>
             <button onClick={() => setShowNew(false)} className="border px-6 py-2 rounded-lg">Cancel</button>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function QuizBuilder() {
       <div className="grid grid-cols-3 gap-4 mb-6">
         {quizzes.map(q => (
           <div key={q.id} onClick={() => setSelected(q)}
-            className={`bg-white rounded-xl p-4 shadow-sm cursor-pointer border-2 transition-colors ${selected?.id === q.id ? 'border-[#3bc7f4]' : 'border-transparent hover:border-gray-200'}`}>
+            className={`bg-white rounded-xl p-4 shadow-sm cursor-pointer border-2 transition-colors ${selected?.id === q.id ? 'border-[#FFD200]' : 'border-transparent hover:border-gray-200'}`}>
             <h3 className="font-semibold">{q.title}</h3>
             <p className="text-sm text-gray-500 mt-1">{q.questions?.length || 0} questions · Pass: {q.passingScore}%</p>
             <span className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${q.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100'}`}>
@@ -99,7 +99,7 @@ export default function QuizBuilder() {
               <input className="border rounded-lg p-3" placeholder="Correct Answer *" value={qForm.correctAnswer} onChange={e => setQForm(f => ({ ...f, correctAnswer: e.target.value }))} />
             </div>
             <button onClick={handleAddQuestion} disabled={!qForm.questionText || !qForm.correctAnswer}
-              className="mt-4 bg-[#3bc7f4] text-white px-6 py-2 rounded-lg disabled:opacity-50">Add Question</button>
+              className="mt-4 bg-[#FFD200] text-[#0d0c2c] px-6 py-2 rounded-lg disabled:opacity-50">Add Question</button>
           </div>
         </div>
       )}

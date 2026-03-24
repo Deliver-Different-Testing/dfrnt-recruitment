@@ -16,14 +16,14 @@ export default function Layout() {
     <div className="flex h-screen">
       <aside className="w-64 bg-[#0d0c2c] text-white flex flex-col">
         <div className="p-6">
-          <h1 className="text-xl font-bold text-[#3bc7f4]">DFRNT</h1>
-          <p className="text-sm text-gray-400 mt-1">Recruitment Portal</p>
+          <img src="/urgent-logo.png" alt="Urgent Couriers" className="h-10 mb-2" />
+          <p className="text-sm text-gray-400">Recruitment Portal</p>
         </div>
         <nav className="flex-1 px-4">
           {navItems.map(item => (
             <NavLink key={item.to} to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive ? 'bg-[#3bc7f4]/20 text-[#3bc7f4]' : 'text-gray-300 hover:bg-white/5'}`
+                `flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${isActive ? 'bg-[#FFD200]/20 text-[#FFD200]' : 'text-gray-300 hover:bg-white/5'}`
               }>
               <item.icon size={20} />
               {item.label}

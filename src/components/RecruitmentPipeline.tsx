@@ -32,8 +32,8 @@ export default function RecruitmentPipeline() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-[#0d0c2c]">Recruitment Pipeline</h1>
         <div className="flex gap-2">
-          <button onClick={() => setView('kanban')} className={`p-2 rounded-lg ${view === 'kanban' ? 'bg-[#3bc7f4] text-white' : 'bg-white'}`}><LayoutGrid size={20} /></button>
-          <button onClick={() => setView('list')} className={`p-2 rounded-lg ${view === 'list' ? 'bg-[#3bc7f4] text-white' : 'bg-white'}`}><List size={20} /></button>
+          <button onClick={() => setView('kanban')} className={`p-2 rounded-lg ${view === 'kanban' ? 'bg-[#FFD200] text-[#0d0c2c]' : 'bg-white'}`}><LayoutGrid size={20} /></button>
+          <button onClick={() => setView('list')} className={`p-2 rounded-lg ${view === 'list' ? 'bg-[#FFD200] text-[#0d0c2c]' : 'bg-white'}`}><List size={20} /></button>
         </div>
       </div>
 

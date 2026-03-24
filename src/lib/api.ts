@@ -2,16 +2,20 @@ const BASE = '/api';
 
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const token = localStorage.getItem('token');
+  const headers: Record<string, string> = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+  // Don't set Content-Type for FormData
+  if (!(options?.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
   const res = await fetch(`${BASE}${url}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options?.headers,
-    },
+    headers: { ...headers, ...options?.headers },
   });
   if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const text = await res.text();
+  return text ? JSON.parse(text) : ({} as T);
 }
 
 // Auth
@@ -42,9 +46,14 @@ export const createDocumentType = (data: Partial<DocumentType>) =>
 export const updateDocumentType = (id: number, data: Partial<DocumentType>) =>
   request<DocumentType>(`/document/types/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const uploadDocument = async (applicantId: number, documentTypeId: number, file: File) => {
+  const token = localStorage.getItem('token');
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${BASE}/document/upload/${applicantId}/${documentTypeId}`, { method: 'POST', body: form });
+  const res = await fetch(`${BASE}/document/upload/${applicantId}/${documentTypeId}`, {
+    method: 'POST',
+    body: form,
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 };
@@ -103,4 +112,8 @@ export interface QuizQuestion {
 export interface QuizAttempt {
   id: number; applicantId: number; quizId: number; startedDate: string;
   completedDate?: string; score: number; passed: boolean; timeTaken?: number;
+  answers?: QuizAnswer[];
+}
+export interface QuizAnswer {
+  id: number; questionId: number; answer: string; isCorrect: boolean; points: number;
 }

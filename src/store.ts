@@ -19,6 +19,10 @@ interface AppState {
   // Current applicant (for apply flow)
   currentApplicantId: number | null
   setCurrentApplicantId: (id: number | null) => void
+
+  // Pipeline detail
+  selectedApplicantId: number | null
+  setSelectedApplicantId: (id: number | null) => void
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -36,4 +40,7 @@ export const useStore = create<AppState>((set) => ({
 
   currentApplicantId: null,
   setCurrentApplicantId: (id) => set({ currentApplicantId: id }),
+
+  selectedApplicantId: null,
+  setSelectedApplicantId: (id) => set({ selectedApplicantId: id }),
 }))

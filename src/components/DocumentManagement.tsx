@@ -37,7 +37,7 @@ export default function DocumentManagement() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-[#0d0c2c]">Document Types</h1>
-        <button onClick={() => { setShowNew(true); resetForm() }} className="flex items-center gap-2 bg-[#3bc7f4] text-white px-4 py-2 rounded-lg">
+        <button onClick={() => { setShowNew(true); resetForm() }} className="flex items-center gap-2 bg-[#FFD200] text-[#0d0c2c] px-4 py-2 rounded-lg">
           <Plus size={18} /> Add Type
         </button>
       </div>
@@ -63,7 +63,7 @@ export default function DocumentManagement() {
           </div>
           <div className="flex gap-2 mt-4">
             <button onClick={editing !== null ? () => handleUpdate(editing) : handleCreate}
-              className="bg-[#3bc7f4] text-white px-6 py-2 rounded-lg flex items-center gap-2"><Save size={16} /> Save</button>
+              className="bg-[#FFD200] text-[#0d0c2c] px-6 py-2 rounded-lg flex items-center gap-2"><Save size={16} /> Save</button>
             <button onClick={() => { setEditing(null); setShowNew(false) }} className="border px-6 py-2 rounded-lg">Cancel</button>
           </div>
         </div>
@@ -89,7 +89,7 @@ export default function DocumentManagement() {
                 <td className="p-4 text-sm">{dt.isRequired ? '✅' : '—'}</td>
                 <td className="p-4 text-sm text-gray-600">{dt.validityMonths ? `${dt.validityMonths} mo` : '—'}</td>
                 <td className="p-4"><span className={`text-xs px-2 py-1 rounded-full ${dt.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>{dt.isActive ? 'Active' : 'Inactive'}</span></td>
-                <td className="p-4"><button onClick={() => startEdit(dt)} className="text-[#3bc7f4] hover:underline text-sm"><Edit2 size={16} /></button></td>
+                <td className="p-4"><button onClick={() => startEdit(dt)} className="text-[#FFD200] hover:underline text-sm"><Edit2 size={16} /></button></td>
               </tr>
             ))}
           </tbody>
