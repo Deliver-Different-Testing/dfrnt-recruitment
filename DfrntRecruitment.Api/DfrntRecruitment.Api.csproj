@@ -12,6 +12,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0-preview.*" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.*" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.*" />
+    <PackageReference Include="AWSSDK.S3" Version="3.*" />
   </ItemGroup>
 
 </Project>
