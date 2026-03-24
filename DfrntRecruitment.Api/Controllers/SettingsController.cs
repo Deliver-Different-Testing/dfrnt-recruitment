@@ -68,6 +68,11 @@ public class SettingsController(AppDbContext db) : ControllerBase
                 .FirstOrDefaultAsync(q => q.IsActive);
         }
 
+        var steps = await db.PortalSteps
+            .Where(s => s.IsActive)
+            .OrderBy(s => s.SortOrder)
+            .ToListAsync();
+
         return Ok(new
         {
             settings.CompanyName,
@@ -77,7 +82,8 @@ public class SettingsController(AppDbContext db) : ControllerBase
             settings.ShowQuizStep,
             settings.PrimaryColor,
             documentTypes = docTypes,
-            quiz = activeQuiz
+            quiz = activeQuiz,
+            steps
         });
     }
 }

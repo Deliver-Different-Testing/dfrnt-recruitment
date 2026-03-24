@@ -74,6 +74,40 @@ public class ApplicantController(AppDbContext db) : ControllerBase
         await db.SaveChangesAsync();
         return Ok(applicant);
     }
+
+    [HttpPost("{id:int}/step-data")]
+    public async Task<IActionResult> SaveStepData(int id, [FromBody] SaveStepDataRequest request)
+    {
+        var applicant = await db.Applicants.FindAsync(id);
+        if (applicant is null) return NotFound();
+
+        var existing = await db.ApplicantStepData
+            .FirstOrDefaultAsync(d => d.ApplicantId == id && d.PortalStepId == request.PortalStepId);
+
+        if (existing != null)
+        {
+            existing.FieldData = request.FieldData;
+            existing.AiExtractedData = request.AiExtractedData;
+            existing.AiConfirmedFields = request.AiConfirmedFields;
+            existing.UpdatedDate = DateTime.UtcNow;
+        }
+        else
+        {
+            db.ApplicantStepData.Add(new ApplicantStepData
+            {
+                ApplicantId = id,
+                PortalStepId = request.PortalStepId,
+                StepType = request.StepType,
+                FieldData = request.FieldData,
+                AiExtractedData = request.AiExtractedData,
+                AiConfirmedFields = request.AiConfirmedFields
+            });
+        }
+
+        await db.SaveChangesAsync();
+        return Ok();
+    }
 }
 
+public record SaveStepDataRequest(int PortalStepId, string StepType, string? FieldData, string? AiExtractedData = null, string? AiConfirmedFields = null);
 public record UpdateStatusRequest(ApplicantStatus Status, string? Notes, string? CreatedBy);

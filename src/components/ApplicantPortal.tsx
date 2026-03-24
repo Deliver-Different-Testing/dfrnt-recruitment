@@ -1,45 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import * as api from '../lib/api'
-import { Upload, CheckCircle, XCircle, Clock, FileText, AlertCircle, Camera, ChevronRight, CreditCard, Car, Shield, FileCheck, Building, Hash, Loader2 } from 'lucide-react'
-
-// ─── Upload Zone ─────────────────────────────────────────
-function UploadZone({ label, description, file, uploading, onFile }: {
-  label: string; description?: string; file: File | null; uploading: boolean; onFile: (f: File) => void
-}) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  return (
-    <div>
-      {file ? (
-        <div className="border-2 border-green-200 bg-green-50 rounded-xl p-5 flex items-center gap-3">
-          <CheckCircle size={24} className="text-green-600 shrink-0" />
-          <div className="min-w-0 flex-1">
-            <p className="font-medium text-sm text-green-800 truncate">{file.name}</p>
-            <p className="text-xs text-green-600">{(file.size / 1024).toFixed(0)} KB</p>
-          </div>
-          <button onClick={() => inputRef.current?.click()} className="text-xs text-green-700 underline">Replace</button>
-          <input ref={inputRef} type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.heic"
-            onChange={e => { if (e.target.files?.[0]) onFile(e.target.files[0]) }} />
-        </div>
-      ) : (
-        <label className={`block border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors
-          ${uploading ? 'border-gray-300 bg-gray-50' : 'border-[#3bc7f4]/40 hover:border-[#FFD200] hover:bg-yellow-50'}`}>
-          {uploading ? (
-            <div className="flex items-center justify-center gap-2 text-gray-500"><Loader2 size={20} className="animate-spin" /> Uploading...</div>
-          ) : (
-            <>
-              <Camera size={32} className="mx-auto mb-3 text-[#3bc7f4]" />
-              <p className="font-semibold text-sm text-[#3bc7f4]">{label}</p>
-              {description && <p className="text-xs text-gray-500 mt-1">{description}</p>}
-            </>
-          )}
-          <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.heic" capture="environment"
-            onChange={e => { if (e.target.files?.[0]) onFile(e.target.files[0]) }} />
-        </label>
-      )}
-    </div>
-  )
-}
+import { getStepType } from '../lib/stepTypes'
+import { CheckCircle, XCircle, Clock, FileText, AlertCircle, Camera, ChevronRight, Car, Shield, FileCheck, Building, Hash, Loader2 } from 'lucide-react'
+import DetailsStep from './steps/DetailsStep'
+import VehicleStep from './steps/VehicleStep'
+import DriverLicenseStep from './steps/DriverLicenseStep'
+import DocumentUploadStep from './steps/DocumentUploadStep'
+import GenericDocumentStep from './steps/GenericDocumentStep'
+import ReviewStep from './steps/ReviewStep'
 
 // ─── Dynamic Step Indicator ──────────────────────────────
 function StepIndicator({ steps, current }: { steps: { key: string; label: string }[]; current: number }) {
@@ -65,21 +34,23 @@ function StepIndicator({ steps, current }: { steps: { key: string; label: string
   )
 }
 
-// ─── Main Apply Flow (DYNAMIC) ───────────────────────────
+// ─── Main Apply Flow (STEP-DRIVEN) ──────────────────────
 function ApplyFlow() {
   const [config, setConfig] = useState<api.PortalConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Record<string, any>>({
     firstName: '', lastName: '', email: '', phone: '', dateOfBirth: '',
     address: '', city: '', region: '', postcode: '', source: '',
     vehicleType: '', hasOwnVehicle: false, vehicleMake: '', vehicleModel: '', vehicleYear: '',
-    licenseType: '', licenseExpiry: '', licenseNumber: '',
+    registrationPlate: '', licenseType: '', licenseExpiry: '', licenseNumber: '',
   })
   const [applicantId, setApplicantId] = useState<number | null>(null)
-  const [files, setFiles] = useState<Record<number, File | null>>({}) // keyed by docType.id
-  const [uploading, setUploading] = useState<number | null>(null)
-  const [uploadedDocs, setUploadedDocs] = useState<Set<number>>(new Set()) // docType IDs that uploaded
+  const [files, setFiles] = useState<Record<string, File | null>>({})
+  const [uploading, setUploading] = useState<string | null>(null)
+  const [uploadedDocs, setUploadedDocs] = useState<Set<number>>(new Set())
+  const [stepFieldData, setStepFieldData] = useState<Record<number, Record<string, any>>>({})
+  const [vehiclePhotos, setVehiclePhotos] = useState<Record<string, File | null>>({})
   const [answers, setAnswers] = useState<Record<number, string>>({})
   const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean; totalQuestions: number } | null>(null)
   const [quizStarted, setQuizStarted] = useState<Date | null>(null)
@@ -92,54 +63,12 @@ function ApplyFlow() {
 
   const update = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }))
 
-  // Load config on mount
   useEffect(() => {
     api.getPortalConfig().then(c => { setConfig(c); setLoading(false) }).catch(() => setLoading(false))
   }, [])
 
-  // Build dynamic steps from config
-  const dynamicSteps: { key: string; label: string; type: 'details' | 'vehicle' | 'doc' | 'quiz' | 'review'; docTypeId?: number }[] = []
-  if (config) {
-    dynamicSteps.push({ key: 'details', label: 'Details', type: 'details' })
-    if (config.showVehicleStep) dynamicSteps.push({ key: 'vehicle', label: 'Vehicle', type: 'vehicle' })
-    for (const dt of config.documentTypes) {
-      dynamicSteps.push({ key: `doc-${dt.id}`, label: dt.name, type: 'doc', docTypeId: dt.id })
-    }
-    if (config.showQuizStep && config.quiz) dynamicSteps.push({ key: 'quiz', label: 'Quiz', type: 'quiz' })
-    dynamicSteps.push({ key: 'review', label: 'Review', type: 'review' })
-  }
-
-  const currentStep = dynamicSteps[step]
-
-  // Save applicant
-  const saveApplicant = async () => {
-    setSaving(true); setError('')
-    try {
-      const result = await api.applyAsApplicant({
-        firstName: form.firstName, lastName: form.lastName, email: form.email,
-        phone: form.phone, address: form.address, city: form.city, region: form.region,
-        vehicleType: form.vehicleType, hasOwnVehicle: form.hasOwnVehicle,
-        licenseType: form.licenseType, licenseExpiry: form.licenseExpiry || undefined,
-        source: form.source, notes: [form.postcode && `Postcode: ${form.postcode}`, form.dateOfBirth && `DOB: ${form.dateOfBirth}`, form.vehicleMake && `Vehicle: ${form.vehicleMake} ${form.vehicleModel} ${form.vehicleYear}`, form.licenseNumber && `License #: ${form.licenseNumber}`].filter(Boolean).join('; ') || undefined,
-      } as any)
-      setApplicantId(result.id)
-      return result.id
-    } catch (e: any) { setError(e.message || 'Error saving'); return null }
-    finally { setSaving(false) }
-  }
-
-  // Upload a document
-  const handleUpload = async (docTypeId: number, file: File) => {
-    let id = applicantId
-    if (!id) { id = await saveApplicant(); if (!id) return }
-    setUploading(docTypeId)
-    setFiles(f => ({ ...f, [docTypeId]: file }))
-    try {
-      await api.uploadDocument(id, docTypeId, file)
-      setUploadedDocs(prev => new Set([...prev, docTypeId]))
-    } catch (e: any) { alert('Upload failed: ' + (e.message || 'Unknown error')) }
-    finally { setUploading(null) }
-  }
+  // Build steps from config.steps (new flow) or fall back to old toggles
+  const portalSteps = config?.steps && config.steps.length > 0 ? config.steps : []
 
   // Quiz timer
   useEffect(() => {
@@ -154,6 +83,39 @@ function ApplyFlow() {
     }
   }, [quizStarted])
 
+  const saveApplicant = async () => {
+    setSaving(true); setError('')
+    try {
+      const result = await api.applyAsApplicant({
+        firstName: form.firstName, lastName: form.lastName, email: form.email,
+        phone: form.phone, address: form.address, city: form.city, region: form.region,
+        vehicleType: form.vehicleType, hasOwnVehicle: form.hasOwnVehicle,
+        licenseType: form.licenseType, licenseExpiry: form.licenseExpiry || undefined,
+        source: form.source,
+        notes: [form.postcode && `Postcode: ${form.postcode}`, form.dateOfBirth && `DOB: ${form.dateOfBirth}`,
+          form.vehicleMake && `Vehicle: ${form.vehicleMake} ${form.vehicleModel} ${form.vehicleYear}`,
+          form.licenseNumber && `License #: ${form.licenseNumber}`,
+          form.registrationPlate && `Rego: ${form.registrationPlate}`].filter(Boolean).join('; ') || undefined,
+      } as any)
+      setApplicantId(result.id)
+      return result.id
+    } catch (e: any) { setError(e.message || 'Error saving'); return null }
+    finally { setSaving(false) }
+  }
+
+  const handleUpload = async (docTypeId: number, file: File, fileKey?: string) => {
+    let id = applicantId
+    if (!id) { id = await saveApplicant(); if (!id) return }
+    const key = fileKey || `doc-${docTypeId}`
+    setUploading(key)
+    setFiles(f => ({ ...f, [key]: file }))
+    try {
+      await api.uploadDocument(id, docTypeId, file)
+      setUploadedDocs(prev => new Set([...prev, docTypeId]))
+    } catch (e: any) { alert('Upload failed: ' + (e.message || 'Unknown error')) }
+    finally { setUploading(null) }
+  }
+
   const handleSubmitQuiz = async () => {
     if (!applicantId || !config?.quiz) return
     setSubmittingQuiz(true)
@@ -167,171 +129,116 @@ function ApplyFlow() {
         answers: answerList
       })
       setQuizResult(result)
-    } catch (e: any) { alert('Error submitting quiz') }
+    } catch { alert('Error submitting quiz') }
     finally { setSubmittingQuiz(false) }
   }
 
   const handleNext = async () => {
+    // Save applicant on first step completion
     if (step === 0 && !applicantId) {
       const id = await saveApplicant()
       if (!id) return
     }
-    if (step < dynamicSteps.length - 1) { setStep(s => s + 1); window.scrollTo(0, 0) }
+    // Save step field data if present
+    const currentPortalStep = portalSteps[step]
+    if (currentPortalStep && stepFieldData[currentPortalStep.id] && applicantId) {
+      try {
+        await api.saveStepData(applicantId, currentPortalStep.id, currentPortalStep.stepType, stepFieldData[currentPortalStep.id])
+      } catch {}
+    }
+    if (step < portalSteps.length - 1) { setStep(s => s + 1); window.scrollTo(0, 0) }
   }
-  const handleBack = () => { setStep(s => Math.max(s - 1, 0)); window.scrollTo(0, 0) }
 
+  const handleBack = () => { setStep(s => Math.max(s - 1, 0)); window.scrollTo(0, 0) }
   const formatTime = (secs: number) => `${Math.floor(secs / 60)}:${(secs % 60).toString().padStart(2, '0')}`
 
   if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 size={32} className="animate-spin text-gray-400" /></div>
   if (!config) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-500">Unable to load application form.</div>
 
+  const currentPortalStep = portalSteps[step]
+
+  const updateStepField = (stepId: number, key: string, value: string) => {
+    setStepFieldData(prev => ({
+      ...prev,
+      [stepId]: { ...(prev[stepId] || {}), [key]: value }
+    }))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <StepIndicator steps={dynamicSteps.map(s => ({ key: s.key, label: s.label }))} current={step} />
+      <StepIndicator steps={portalSteps.map(s => ({ key: `step-${s.id}`, label: s.title }))} current={step} />
 
       <div className="max-w-2xl mx-auto py-8 px-4">
         {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2"><AlertCircle size={18} />{error}</div>}
 
-        {/* ── DETAILS STEP ──────────────────────── */}
-        {currentStep?.type === 'details' && (
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-            <h2 className="text-2xl font-bold text-[#0d0c2c] mb-1">Your Details</h2>
-            <p className="text-gray-500 mb-6">Enter your personal information below.</p>
-
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="First Name *" placeholder="John" value={form.firstName} onChange={v => update('firstName', v)} />
-                <Field label="Last Name *" placeholder="Smith" value={form.lastName} onChange={v => update('lastName', v)} />
-              </div>
-              <Field label="Email *" placeholder="john@example.com" type="email" value={form.email} onChange={v => update('email', v)} />
-              <Field label="Mobile Number *" placeholder="+64 21 123 4567" value={form.phone} onChange={v => update('phone', v)} />
-              <Field label="Date of Birth" type="date" value={form.dateOfBirth} onChange={v => update('dateOfBirth', v)} />
-              <Field label="Address" placeholder="Street address" value={form.address} onChange={v => update('address', v)} />
-              <div className="grid grid-cols-3 gap-4">
-                <Field label="City" placeholder="Auckland" value={form.city} onChange={v => update('city', v)} />
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Region</label>
-                  <select className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#FFD200] focus:border-[#FFD200] outline-none"
-                    value={form.region} onChange={e => update('region', e.target.value)}>
-                    <option value="">Select</option>
-                    {['Auckland','Wellington','Canterbury','Waikato','Bay of Plenty','Otago','Manawatu-Whanganui',"Hawke's Bay",'Northland','Taranaki','Southland','Nelson','Marlborough','West Coast','Gisborne','Tasman'].map(r =>
-                      <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </div>
-                <Field label="Postcode" placeholder="1010" value={form.postcode} onChange={v => update('postcode', v)} />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">How did you hear about us?</label>
-                <select className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#FFD200] focus:border-[#FFD200] outline-none"
-                  value={form.source} onChange={e => update('source', e.target.value)}>
-                  <option value="">Select...</option>
-                  <option value="seek">Seek</option><option value="trademe">Trade Me Jobs</option><option value="website">Urgent Couriers Website</option>
-                  <option value="referral">Referral from existing driver</option><option value="facebook">Facebook</option>
-                  <option value="linkedin">LinkedIn</option><option value="walkin">Walk-in</option><option value="other">Other</option>
-                </select>
-              </div>
-            </div>
-            <NavButtons onNext={handleNext} disabled={!form.firstName || !form.lastName || !form.email || !form.phone || saving} nextLabel={saving ? 'Saving...' : undefined} />
-          </div>
+        {/* Render step based on stepType */}
+        {currentPortalStep?.stepType === 'details' && (
+          <DetailsStep form={form} update={update} onNext={handleNext} saving={saving}
+            title={currentPortalStep.title} description={currentPortalStep.description} />
         )}
 
-        {/* ── VEHICLE STEP ─────────────────────── */}
-        {currentStep?.type === 'vehicle' && (
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-            <h2 className="text-2xl font-bold text-[#0d0c2c] mb-1">Vehicle Details</h2>
-            <p className="text-gray-500 mb-6">Tell us about the vehicle you'll use for deliveries.</p>
-
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Vehicle Type *</label>
-                <select className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#FFD200] focus:border-[#FFD200] outline-none"
-                  value={form.vehicleType} onChange={e => update('vehicleType', e.target.value)}>
-                  <option value="">Select vehicle type</option>
-                  <option value="car">Car / Sedan</option><option value="suv">SUV / Station Wagon</option>
-                  <option value="van">Van</option><option value="ute">Ute</option><option value="truck">Truck (Class 2+)</option>
-                  <option value="bike">Motorbike</option><option value="ebike">E-Bike / Bicycle</option>
-                  <option value="none">No vehicle — need company vehicle</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <Field label="Make" placeholder="Toyota" value={form.vehicleMake} onChange={v => update('vehicleMake', v)} />
-                <Field label="Model" placeholder="Hiace" value={form.vehicleModel} onChange={v => update('vehicleModel', v)} />
-                <Field label="Year" placeholder="2020" value={form.vehicleYear} onChange={v => update('vehicleYear', v)} />
-              </div>
-              <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer border border-gray-200">
-                <input type="checkbox" checked={form.hasOwnVehicle} onChange={e => update('hasOwnVehicle', e.target.checked)} className="w-5 h-5 accent-[#FFD200]" />
-                <div><span className="font-medium text-sm">I own this vehicle</span><p className="text-xs text-gray-500">Available for courier work</p></div>
-              </label>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">Driver's License Class *</label>
-                <select className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#FFD200] focus:border-[#FFD200] outline-none"
-                  value={form.licenseType} onChange={e => update('licenseType', e.target.value)}>
-                  <option value="">Select license class</option>
-                  <option value="Class 1 - Full">Class 1 — Full (Car)</option><option value="Class 1 - Restricted">Class 1 — Restricted</option>
-                  <option value="Class 2 - Full">Class 2 — Full (Medium rigid)</option><option value="Class 2 - Restricted">Class 2 — Restricted</option>
-                  <option value="Class 3 - Full">Class 3 — Full</option><option value="Class 4 - Full">Class 4 — Full</option>
-                  <option value="Class 5 - Full">Class 5 — Full</option><option value="Overseas">Overseas License</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="License Number" placeholder="AB123456" value={form.licenseNumber} onChange={v => update('licenseNumber', v)} />
-                <Field label="License Expiry *" type="date" value={form.licenseExpiry} onChange={v => update('licenseExpiry', v)} />
-              </div>
-            </div>
-            <NavButtons onBack={handleBack} onNext={handleNext} disabled={!form.vehicleType || !form.licenseType} />
-          </div>
+        {currentPortalStep?.stepType === 'vehicle' && (
+          <VehicleStep form={form} update={update} onNext={handleNext} onBack={handleBack}
+            title={currentPortalStep.title} description={currentPortalStep.description}
+            vehiclePhotos={vehiclePhotos} onVehiclePhoto={(key: string, file: File) => setVehiclePhotos(p => ({ ...p, [key]: file }))} />
         )}
 
-        {/* ── DOCUMENT UPLOAD STEP (one per doc type) */}
-        {currentStep?.type === 'doc' && (() => {
-          const dt = config.documentTypes.find(d => d.id === currentStep.docTypeId)!
-          const file = files[dt.id] || null
-          const uploaded = uploadedDocs.has(dt.id)
-          return (
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-bold text-[#0d0c2c]">{dt.name}</h2>
-                {dt.isRequired && <span className="text-xs text-red-500 font-semibold bg-red-50 px-2 py-0.5 rounded-full">Required</span>}
-              </div>
-              {dt.description && <p className="text-gray-500 mb-6">{dt.description}</p>}
+        {currentPortalStep?.stepType === 'driver_license' && (
+          <DriverLicenseStep
+            title={currentPortalStep.title} description={currentPortalStep.description}
+            isRequired={currentPortalStep.isRequired}
+            form={stepFieldData[currentPortalStep.id] || {}}
+            update={(field, value) => updateStepField(currentPortalStep.id, field, value)}
+            files={files} onFile={(key, f) => setFiles(prev => ({ ...prev, [key]: f }))}
+            uploading={uploading === 'license_front'}
+            onNext={handleNext} onBack={handleBack}
+            onUpload={currentPortalStep.documentTypeId ? (f) => handleUpload(currentPortalStep.documentTypeId!, f, 'license_front') : undefined}
+          />
+        )}
 
-              <UploadZone
-                label={`📷 Upload ${dt.name}`}
-                description="Take a photo or upload a file"
-                file={file}
-                uploading={uploading === dt.id}
-                onFile={f => handleUpload(dt.id, f)}
-              />
+        {['vehicle_registration', 'vehicle_insurance', 'wof_certificate', 'tsl_certificate'].includes(currentPortalStep?.stepType || '') && (
+          <DocumentUploadStep
+            stepType={currentPortalStep.stepType}
+            title={currentPortalStep.title} description={currentPortalStep.description}
+            isRequired={currentPortalStep.isRequired}
+            file={files[`doc-${currentPortalStep.documentTypeId}`] || null}
+            uploading={uploading === `doc-${currentPortalStep.documentTypeId}`}
+            uploaded={currentPortalStep.documentTypeId ? uploadedDocs.has(currentPortalStep.documentTypeId) : false}
+            onFile={f => currentPortalStep.documentTypeId && handleUpload(currentPortalStep.documentTypeId, f)}
+            fields={stepFieldData[currentPortalStep.id] || {}}
+            updateField={(key, value) => updateStepField(currentPortalStep.id, key, value)}
+            onNext={handleNext} onBack={handleBack}
+          />
+        )}
 
-              {dt.validityMonths && <p className="text-xs text-gray-400 mt-3">This document is valid for {dt.validityMonths} months after upload.</p>}
+        {currentPortalStep?.stepType === 'generic_document' && (
+          <GenericDocumentStep
+            title={currentPortalStep.title} description={currentPortalStep.description}
+            isRequired={currentPortalStep.isRequired}
+            file={files[`step-${currentPortalStep.id}`] || null}
+            uploading={uploading === `step-${currentPortalStep.id}`}
+            uploaded={false}
+            onFile={f => {
+              setFiles(prev => ({ ...prev, [`step-${currentPortalStep.id}`]: f }))
+              if (currentPortalStep.documentTypeId) handleUpload(currentPortalStep.documentTypeId, f, `step-${currentPortalStep.id}`)
+            }}
+            onNext={handleNext} onBack={handleBack}
+          />
+        )}
 
-              <div className="flex gap-4 mt-8">
-                <button onClick={handleBack} className="flex-1 border border-gray-300 py-3.5 rounded-xl font-medium hover:bg-gray-50 transition-colors">← Back</button>
-                {!dt.isRequired && !file && (
-                  <button onClick={handleNext} className="flex-1 bg-gray-100 text-gray-700 py-3.5 rounded-xl font-medium hover:bg-gray-200 transition-colors">
-                    Skip — I'll add this later
-                  </button>
-                )}
-                <button onClick={handleNext} disabled={dt.isRequired && !uploaded && !file}
-                  className="flex-1 bg-[#0d0c2c] text-white py-3.5 rounded-xl font-semibold hover:bg-[#1a1950] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-                  Next <ChevronRight size={18} />
-                </button>
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* ── QUIZ STEP ────────────────────────── */}
-        {currentStep?.type === 'quiz' && config.quiz && (
+        {currentPortalStep?.stepType === 'quiz' && config.quiz && (
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-            <h2 className="text-2xl font-bold text-[#0d0c2c] mb-2">Assessment Quiz</h2>
+            <h2 className="text-2xl font-bold text-[#0d0c2c] mb-2">{currentPortalStep.title}</h2>
 
             {quizResult ? (
               <div className="text-center py-8">
                 {quizResult.passed ? <CheckCircle size={48} className="mx-auto mb-3 text-green-500" /> : <XCircle size={48} className="mx-auto mb-3 text-red-500" />}
                 <h3 className="text-2xl font-bold">{quizResult.passed ? 'Passed!' : 'Not Passed'}</h3>
                 <p className="text-gray-600 mt-2">Score: {quizResult.score} ({quizResult.totalQuestions} questions)</p>
-                <NavButtons onBack={handleBack} onNext={handleNext} nextLabel="Continue →" />
+                <div className="flex gap-4 mt-8">
+                  <button onClick={handleBack} className="flex-1 border border-gray-300 py-3.5 rounded-xl font-medium hover:bg-gray-50">← Back</button>
+                  <button onClick={handleNext} className="flex-1 bg-[#0d0c2c] text-white py-3.5 rounded-xl font-semibold hover:bg-[#1a1950]">Next <ChevronRight size={18} className="inline" /></button>
+                </div>
               </div>
             ) : !quizStarted ? (
               <div className="text-center py-8">
@@ -396,54 +303,13 @@ function ApplyFlow() {
           </div>
         )}
 
-        {/* ── REVIEW STEP ──────────────────────── */}
-        {currentStep?.type === 'review' && !submitted && (
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
-            <h2 className="text-2xl font-bold text-[#0d0c2c] mb-1">Review Your Application</h2>
-            <p className="text-gray-500 mb-6">Check everything looks correct before submitting.</p>
-
-            <ReviewSection title="Personal Details">
-              <ReviewRow label="Name" value={`${form.firstName} ${form.lastName}`} />
-              <ReviewRow label="Email" value={form.email} />
-              <ReviewRow label="Phone" value={form.phone} />
-              {form.dateOfBirth && <ReviewRow label="Date of Birth" value={form.dateOfBirth} />}
-              {form.address && <ReviewRow label="Address" value={[form.address, form.city, form.region, form.postcode].filter(Boolean).join(', ')} />}
-            </ReviewSection>
-
-            {config.showVehicleStep && (
-              <ReviewSection title="Vehicle & License">
-                <ReviewRow label="Vehicle" value={[form.vehicleMake, form.vehicleModel, form.vehicleYear].filter(Boolean).join(' ') || form.vehicleType || '—'} />
-                <ReviewRow label="Own Vehicle" value={form.hasOwnVehicle ? 'Yes' : 'No'} />
-                <ReviewRow label="License" value={form.licenseType || '—'} />
-                {form.licenseNumber && <ReviewRow label="License #" value={form.licenseNumber} />}
-                {form.licenseExpiry && <ReviewRow label="Expiry" value={form.licenseExpiry} />}
-              </ReviewSection>
-            )}
-
-            <ReviewSection title="Documents">
-              {config.documentTypes.map(dt => (
-                <div key={dt.id} className="flex items-center justify-between text-sm py-1.5">
-                  <span className="text-gray-600">{dt.name} {dt.isRequired && <span className="text-red-400 text-xs">*</span>}</span>
-                  {uploadedDocs.has(dt.id) || files[dt.id] ? (
-                    <span className="flex items-center gap-1 text-green-600 text-xs font-medium"><CheckCircle size={14} /> Uploaded</span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-gray-400 text-xs"><Clock size={14} /> {dt.isRequired ? 'Missing' : 'Skipped'}</span>
-                  )}
-                </div>
-              ))}
-            </ReviewSection>
-
-            <div className="flex gap-4 mt-8">
-              <button onClick={handleBack} className="flex-1 border border-gray-300 py-3.5 rounded-xl font-medium hover:bg-gray-50">← Back</button>
-              <button onClick={() => setSubmitted(true)}
-                className="flex-1 bg-[#FFD200] text-[#0d0c2c] py-3.5 rounded-xl font-bold text-lg hover:bg-[#E87C1E] hover:text-white transition-colors">
-                Submit Application ✓
-              </button>
-            </div>
-          </div>
+        {currentPortalStep?.stepType === 'review' && !submitted && (
+          <ReviewStep form={form} steps={portalSteps} files={files} uploadedDocs={uploadedDocs}
+            stepFieldData={stepFieldData} onBack={handleBack} onSubmit={() => setSubmitted(true)}
+            title={currentPortalStep.title} description={currentPortalStep.description} />
         )}
 
-        {/* ── CONFIRMATION ─────────────────────── */}
+        {/* Confirmation */}
         {submitted && (
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -465,40 +331,6 @@ function ApplyFlow() {
       </div>
     </div>
   )
-}
-
-// ─── Shared components ───────────────────────────────────
-function Field({ label, placeholder, type = 'text', value, onChange }: {
-  label: string; placeholder?: string; type?: string; value: string; onChange: (v: string) => void
-}) {
-  return (
-    <div>
-      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">{label}</label>
-      <input className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-[#FFD200] focus:border-[#FFD200] outline-none"
-        type={type} placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} />
-    </div>
-  )
-}
-
-function NavButtons({ onBack, onNext, disabled, nextLabel, skipLabel }: {
-  onBack?: () => void; onNext: () => void; disabled?: boolean; nextLabel?: string; skipLabel?: string
-}) {
-  return (
-    <div className="flex gap-4 mt-8">
-      {onBack && <button onClick={onBack} className="flex-1 border border-gray-300 py-3.5 rounded-xl font-medium hover:bg-gray-50 transition-colors">← Back</button>}
-      <button onClick={onNext} disabled={disabled}
-        className="flex-1 bg-[#0d0c2c] text-white py-3.5 rounded-xl font-semibold hover:bg-[#1a1950] disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
-        {nextLabel || <>Next <ChevronRight size={18} /></>}
-      </button>
-    </div>
-  )
-}
-
-function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="mb-6"><h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3 border-b pb-2">{title}</h3><div className="space-y-1.5">{children}</div></div>
-}
-function ReviewRow({ label, value }: { label: string; value: string }) {
-  return <div className="flex justify-between text-sm"><span className="text-gray-500">{label}</span><span className="font-medium text-[#0d0c2c]">{value || '—'}</span></div>
 }
 
 // ─── Status Check ────────────────────────────────────────
@@ -527,9 +359,7 @@ function StatusCheck() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-[#0d0c2c] text-white py-6 px-8 flex items-center gap-4">
-        
-      </header>
+      <header className="bg-[#0d0c2c] text-white py-6 px-8 flex items-center gap-4" />
       <div className="max-w-xl mx-auto py-8 px-4">
         <h2 className="text-xl font-semibold mb-4">Check Application Status</h2>
         <div className="flex gap-2 mb-6">
@@ -579,23 +409,16 @@ function LandingPage() {
 
   if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 size={32} className="animate-spin text-gray-400" /></div>
 
-  // Build the same dynamic steps the applicant will see
-  const flowSteps: { icon: typeof FileText; label: string; description?: string; required?: boolean }[] = []
-  if (config) {
-    flowSteps.push({ icon: FileText, label: 'Your Details', description: 'Name, email, phone & address' })
-    if (config.showVehicleStep) flowSteps.push({ icon: Car, label: 'Vehicle & License', description: 'Vehicle type, make/model & license details' })
-    for (const dt of config.documentTypes) {
-      const docIcons = [CreditCard, Car, Shield, FileCheck, Building, Hash, FileText, FileText]
-      flowSteps.push({ icon: docIcons[flowSteps.length % docIcons.length], label: dt.name, description: dt.description || undefined, required: dt.isRequired })
-    }
-    if (config.showQuizStep && config.quiz) flowSteps.push({ icon: CheckCircle, label: 'Assessment Quiz', description: config.quiz.title || 'Quick knowledge check' })
-  }
+  // Build flow steps from config.steps
+  const flowSteps = (config?.steps || []).filter(s => s.stepType !== 'review').map(s => {
+    const type = getStepType(s.stepType)
+    return { label: s.title, description: s.description, required: s.isRequired, icon: type?.icon || '📄' }
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto py-8 px-4">
         <div className="bg-[#0d0c2c] rounded-2xl p-8 mb-8">
-          
           <h1 className="text-3xl font-bold text-white mb-2">{config?.welcomeTitle || 'Join Our Team'}</h1>
           <p className="text-gray-400">{config?.welcomeSubtitle || "We're looking for reliable courier drivers across New Zealand."}</p>
         </div>
@@ -604,28 +427,25 @@ function LandingPage() {
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-[#0d0c2c] mb-4">What you'll need to apply</h2>
             <div className="grid grid-cols-2 gap-3">
-              {flowSteps.map((step, i) => {
-                const Icon = step.icon
-                return (
-                  <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0"><Icon size={20} className="text-[#0d0c2c]" /></div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm text-[#0d0c2c]">{step.label}</span>
-                        {step.required && <span className="text-xs text-red-500 font-medium">Required</span>}
-                      </div>
-                      {step.description && <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>}
+              {flowSteps.map((step, i) => (
+                <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 text-lg">{step.icon}</div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-sm text-[#0d0c2c]">{step.label}</span>
+                      {step.required && <span className="text-xs text-red-500 font-medium">Required</span>}
                     </div>
+                    {step.description && <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>}
                   </div>
-                )
-              })}
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex items-start gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0"><Clock size={20} className="text-green-600" /></div>
-          <div><p className="font-semibold text-sm text-[#0d0c2c]">Quick & Easy — About {flowSteps.length + 1} steps</p><p className="text-xs text-green-700 mt-0.5">Take photos of your documents with your phone camera. Upload them directly.</p></div>
+          <div><p className="font-semibold text-sm text-[#0d0c2c]">Quick & Easy — About {(config?.steps || []).length} steps</p><p className="text-xs text-green-700 mt-0.5">Take photos of your documents with your phone camera. Upload them directly.</p></div>
         </div>
 
         <button onClick={() => navigate('/apply/form')}

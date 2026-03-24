@@ -17,6 +17,9 @@ public class AppDbContext : DbContext
     public DbSet<QuizAttempt> QuizAttempts => Set<QuizAttempt>();
     public DbSet<QuizAnswer> QuizAnswers => Set<QuizAnswer>();
     public DbSet<TenantSettings> TenantSettings => Set<TenantSettings>();
+    public DbSet<PortalStep> PortalSteps => Set<PortalStep>();
+    public DbSet<ApplicantStepData> ApplicantStepData => Set<ApplicantStepData>();
+    public DbSet<AdminUser> AdminUsers => Set<AdminUser>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -59,6 +59,39 @@ try
         db.SaveChanges();
         Log.Information("Seeded default document types");
     }
+
+    // Seed admin user if none exist
+    if (!db.AdminUsers.Any())
+    {
+        db.AdminUsers.Add(new DfrntRecruitment.Api.Core.Domain.Entities.AdminUser
+        {
+            Username = "admin",
+            Email = "admin@urgent.co.nz",
+            DisplayName = "Admin",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("dfrnt2026!"),
+            Role = "Admin",
+            IsActive = true
+        });
+        db.SaveChanges();
+        Log.Information("Seeded default admin user");
+    }
+
+    // Seed portal steps if empty
+    if (!db.PortalSteps.Any())
+    {
+        db.PortalSteps.AddRange(
+            new DfrntRecruitment.Api.Core.Domain.Entities.PortalStep { StepType = "details", Title = "Personal Details", Description = "Enter your personal information", SortOrder = 1, IsRequired = true, IsActive = true },
+            new DfrntRecruitment.Api.Core.Domain.Entities.PortalStep { StepType = "vehicle", Title = "Vehicle Details", Description = "Tell us about your vehicle and license", SortOrder = 2, IsRequired = true, IsActive = true },
+            new DfrntRecruitment.Api.Core.Domain.Entities.PortalStep { StepType = "driver_license", Title = "Driver's License", Description = "Upload your driver's license (front and back)", SortOrder = 3, IsRequired = true, IsActive = true, DocumentTypeId = 1 },
+            new DfrntRecruitment.Api.Core.Domain.Entities.PortalStep { StepType = "vehicle_registration", Title = "Vehicle Registration", Description = "Upload your vehicle registration certificate", SortOrder = 4, IsRequired = true, IsActive = true, DocumentTypeId = 2 },
+            new DfrntRecruitment.Api.Core.Domain.Entities.PortalStep { StepType = "vehicle_insurance", Title = "Vehicle Insurance", Description = "Upload your vehicle insurance certificate", SortOrder = 5, IsRequired = false, IsActive = true, DocumentTypeId = 3 },
+            new DfrntRecruitment.Api.Core.Domain.Entities.PortalStep { StepType = "wof_certificate", Title = "WOF Certificate", Description = "Upload a photo of your WOF sticker or certificate", SortOrder = 6, IsRequired = true, IsActive = true, DocumentTypeId = 6 },
+            new DfrntRecruitment.Api.Core.Domain.Entities.PortalStep { StepType = "tsl_certificate", Title = "TSL Certificate", Description = "Upload your TSL certificate if applicable", SortOrder = 7, IsRequired = false, IsActive = true },
+            new DfrntRecruitment.Api.Core.Domain.Entities.PortalStep { StepType = "review", Title = "Review & Submit", Description = "Review your application and submit", SortOrder = 100, IsRequired = true, IsActive = true }
+        );
+        db.SaveChanges();
+        Log.Information("Seeded default portal steps");
+    }
 }
 catch (Exception ex)
 {

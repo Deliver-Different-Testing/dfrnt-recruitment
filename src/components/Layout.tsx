@@ -1,12 +1,14 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
-import { HelpCircle, LogOut, LayoutDashboard, Users, Settings } from 'lucide-react'
+import { HelpCircle, LogOut, LayoutDashboard, Users, Settings, FileText, Workflow } from 'lucide-react'
 
 const navItems = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/admin/pipeline', label: 'Pipeline', icon: Users },
+  { to: '/admin/documents', label: 'Documents', icon: FileText },
   { to: '/admin/quizzes', label: 'Quizzes', icon: HelpCircle },
-  { to: '/admin/settings', label: 'Portal Settings', icon: Settings },
+  { to: '/admin/flow-builder', label: 'Flow Builder', icon: Workflow },
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
 ]
 
 export default function Layout() {

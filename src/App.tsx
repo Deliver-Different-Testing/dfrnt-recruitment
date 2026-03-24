@@ -5,7 +5,8 @@ import RecruitmentPipeline from './components/RecruitmentPipeline'
 import DocumentManagement from './components/DocumentManagement'
 import QuizBuilder from './components/QuizBuilder'
 import Dashboard from './components/Dashboard'
-import PortalSettings from './components/PortalSettings'
+import FlowBuilder from './components/FlowBuilder'
+import AdminSettings from './components/AdminSettings'
 import { useStore } from './store'
 import { useState } from 'react'
 import * as api from './lib/api'
@@ -18,7 +19,6 @@ function LoginPage() {
   const isAdmin = useStore(s => s.isAdmin)
   const navigate = useNavigate()
 
-  // Already logged in — redirect
   if (isAdmin) return <Navigate to="/admin/dashboard" />
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -57,7 +57,8 @@ export default function App() {
         <Route path="pipeline" element={<RecruitmentPipeline />} />
         <Route path="documents" element={<DocumentManagement />} />
         <Route path="quizzes" element={<QuizBuilder />} />
-        <Route path="settings" element={<PortalSettings />} />
+        <Route path="flow-builder" element={<FlowBuilder />} />
+        <Route path="settings" element={<AdminSettings />} />
       </Route>
       <Route path="*" element={<Navigate to="/apply" />} />
     </Routes>
