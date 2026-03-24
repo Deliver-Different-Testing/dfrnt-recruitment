@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import * as api from '../lib/api'
 import { getStepType } from '../lib/stepTypes'
-import { CheckCircle, XCircle, Clock, FileText, AlertCircle, Camera, ChevronRight, Car, Shield, FileCheck, Building, Hash, Loader2 } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, FileText, AlertCircle, Camera, ChevronRight, Car, Shield, FileCheck, Building, Hash, Loader2, Eye } from 'lucide-react'
 import DetailsStep from './steps/DetailsStep'
 import VehicleStep from './steps/VehicleStep'
 import DriverLicenseStep from './steps/DriverLicenseStep'
@@ -35,11 +35,22 @@ function StepIndicator({ steps, current }: { steps: { key: string; label: string
 }
 
 // ─── Main Apply Flow (STEP-DRIVEN) ──────────────────────
+const PREVIEW_DUMMY_DATA: Record<string, any> = {
+  firstName: 'Jane', lastName: 'Smith', email: 'jane.smith@example.com',
+  phone: '021 555 0123', dateOfBirth: '1990-05-15',
+  address: '42 Queen Street', city: 'Auckland', region: 'Auckland', postcode: '1010',
+  source: 'Website', vehicleType: 'Van', hasOwnVehicle: true,
+  vehicleMake: 'Toyota', vehicleModel: 'HiAce', vehicleYear: '2020',
+  registrationPlate: 'ABC123', licenseType: 'Class 2', licenseExpiry: '2028-12-01',
+  licenseNumber: 'AB123456',
+}
+
 function ApplyFlow() {
+  const isPreview = new URLSearchParams(window.location.search).get('preview') === 'true'
   const [config, setConfig] = useState<api.PortalConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState<Record<string, any>>({
+  const [form, setForm] = useState<Record<string, any>>(isPreview ? { ...PREVIEW_DUMMY_DATA } : {
     firstName: '', lastName: '', email: '', phone: '', dateOfBirth: '',
     address: '', city: '', region: '', postcode: '', source: '',
     vehicleType: '', hasOwnVehicle: false, vehicleMake: '', vehicleModel: '', vehicleYear: '',
@@ -134,6 +145,11 @@ function ApplyFlow() {
   }
 
   const handleNext = async () => {
+    if (isPreview) {
+      // Preview mode — skip all API calls, just advance
+      if (step < portalSteps.length - 1) { setStep(s => s + 1); window.scrollTo(0, 0) }
+      return
+    }
     // Save applicant on first step completion
     if (step === 0 && !applicantId) {
       const id = await saveApplicant()
@@ -169,6 +185,11 @@ function ApplyFlow() {
       <StepIndicator steps={portalSteps.map(s => ({ key: `step-${s.id}`, label: s.title }))} current={step} />
 
       <div className="max-w-2xl mx-auto py-8 px-4">
+        {isPreview && (
+          <div className="bg-amber-50 border border-amber-300 text-amber-800 px-4 py-3 rounded-lg mb-4 flex items-center gap-2 text-sm font-medium">
+            <Eye size={16} /> Preview Mode — dummy data filled, no records will be created
+          </div>
+        )}
         {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 flex items-center gap-2"><AlertCircle size={18} />{error}</div>}
 
         {/* Render step based on stepType */}
@@ -306,7 +327,8 @@ function ApplyFlow() {
         {currentPortalStep?.stepType === 'review' && !submitted && (
           <ReviewStep form={form} steps={portalSteps} files={files} uploadedDocs={uploadedDocs}
             stepFieldData={stepFieldData} onBack={handleBack} onSubmit={() => setSubmitted(true)}
-            title={currentPortalStep.title} description={currentPortalStep.description} />
+            title={currentPortalStep.title} description={currentPortalStep.description}
+            isPreview={isPreview} />
         )}
 
         {/* Confirmation */}

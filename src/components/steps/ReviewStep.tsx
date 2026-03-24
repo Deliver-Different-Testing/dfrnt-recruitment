@@ -11,6 +11,7 @@ interface Props {
   onSubmit: () => void
   title: string
   description?: string
+  isPreview?: boolean
 }
 
 function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {

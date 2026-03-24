@@ -101,7 +101,7 @@ export default function FlowBuilder() {
           <p className="text-sm text-gray-500 mt-1">Design the applicant portal flow — drag steps to reorder</p>
         </div>
         <div className="flex items-center gap-3">
-          <a href="/apply" target="_blank" className="flex items-center gap-2 text-sm text-gray-600 border rounded-lg px-4 py-2 hover:bg-gray-50">
+          <a href="/apply/form?preview=true" target="_blank" className="flex items-center gap-2 text-sm text-gray-600 border rounded-lg px-4 py-2 hover:bg-gray-50">
             <Eye size={16} /> Preview Portal
           </a>
           <button onClick={handleSaveAll} disabled={saving}
