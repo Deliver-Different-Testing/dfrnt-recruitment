@@ -28,5 +28,12 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ApplicantDocument>().Property(d => d.Status).HasConversion<string>();
         modelBuilder.Entity<DocumentType>().Property(d => d.AppliesTo).HasConversion<string>();
         modelBuilder.Entity<QuizQuestion>().Property(q => q.QuestionType).HasConversion<string>();
+
+        // Performance indexes
+        modelBuilder.Entity<Applicant>().HasIndex(a => a.Status);
+        modelBuilder.Entity<Applicant>().HasIndex(a => a.AppliedDate);
+        modelBuilder.Entity<ApplicantDocument>().HasIndex(a => a.ApplicantId);
+        modelBuilder.Entity<RecruitmentStage>().HasIndex(s => s.ApplicantId);
+        modelBuilder.Entity<RecruitmentNote>().HasIndex(n => n.ApplicantId);
     }
 }

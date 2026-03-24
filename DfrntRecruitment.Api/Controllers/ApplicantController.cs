@@ -11,12 +11,13 @@ public class ApplicantController(AppDbContext db) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll() =>
-        Ok(await db.Applicants.OrderByDescending(a => a.AppliedDate).ToListAsync());
+        Ok(await db.Applicants.AsNoTracking().OrderByDescending(a => a.AppliedDate).ToListAsync());
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
         var applicant = await db.Applicants
+            .AsNoTracking()
             .Include(a => a.Documents).ThenInclude(d => d.DocumentType)
             .Include(a => a.Stages)
             .Include(a => a.RecruitmentNotes)
@@ -29,6 +30,7 @@ public class ApplicantController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> GetByEmail(string email)
     {
         var applicant = await db.Applicants
+            .AsNoTracking()
             .Include(a => a.Documents)
             .Include(a => a.QuizAttempts)
             .FirstOrDefaultAsync(a => a.Email == email);

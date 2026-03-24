@@ -1,16 +1,18 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import React, { Suspense, useState } from 'react'
 import Layout from './components/Layout'
 import ApplicantPortal from './components/ApplicantPortal'
-import RecruitmentPipeline from './components/RecruitmentPipeline'
-import DocumentManagement from './components/DocumentManagement'
-import QuizBuilder from './components/QuizBuilder'
-import Dashboard from './components/Dashboard'
-import FlowBuilder from './components/FlowBuilder'
-import AdminSettings from './components/AdminSettings'
 import SetupPassword from './components/SetupPassword'
 import { useStore } from './store'
-import { useState } from 'react'
 import * as api from './lib/api'
+
+// Lazy-load admin pages
+const Dashboard = React.lazy(() => import('./components/Dashboard'))
+const RecruitmentPipeline = React.lazy(() => import('./components/RecruitmentPipeline'))
+const DocumentManagement = React.lazy(() => import('./components/DocumentManagement'))
+const QuizBuilder = React.lazy(() => import('./components/QuizBuilder'))
+const FlowBuilder = React.lazy(() => import('./components/FlowBuilder'))
+const AdminSettings = React.lazy(() => import('./components/AdminSettings'))
 
 function LoginPage() {
   const [username, setUsername] = useState('')
@@ -55,12 +57,12 @@ export default function App() {
       <Route path="/admin/setup-password" element={<SetupPassword />} />
       <Route path="/admin" element={isAdmin ? <Layout /> : <Navigate to="/admin/login" />}>
         <Route index element={<Navigate to="dashboard" />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="pipeline" element={<RecruitmentPipeline />} />
-        <Route path="documents" element={<DocumentManagement />} />
-        <Route path="quizzes" element={<QuizBuilder />} />
-        <Route path="flow-builder" element={<FlowBuilder />} />
-        <Route path="settings" element={<AdminSettings />} />
+        <Route path="dashboard" element={<Suspense fallback={<div className="p-8 text-center">Loading...</div>}><Dashboard /></Suspense>} />
+        <Route path="pipeline" element={<Suspense fallback={<div className="p-8 text-center">Loading...</div>}><RecruitmentPipeline /></Suspense>} />
+        <Route path="documents" element={<Suspense fallback={<div className="p-8 text-center">Loading...</div>}><DocumentManagement /></Suspense>} />
+        <Route path="quizzes" element={<Suspense fallback={<div className="p-8 text-center">Loading...</div>}><QuizBuilder /></Suspense>} />
+        <Route path="flow-builder" element={<Suspense fallback={<div className="p-8 text-center">Loading...</div>}><FlowBuilder /></Suspense>} />
+        <Route path="settings" element={<Suspense fallback={<div className="p-8 text-center">Loading...</div>}><AdminSettings /></Suspense>} />
       </Route>
       <Route path="*" element={<Navigate to="/apply" />} />
     </Routes>

@@ -13,7 +13,7 @@ public class RecruitmentController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> GetPipeline()
     {
         var applicants = await db.Applicants
-            .Include(a => a.Documents)
+            .AsNoTracking()
             .OrderByDescending(a => a.AppliedDate)
             .ToListAsync();
 
