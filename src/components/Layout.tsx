@@ -18,7 +18,7 @@ export default function Layout() {
     <div className="flex h-screen">
       <aside className="w-64 bg-[#0d0c2c] text-white flex flex-col">
         <div className="p-6">
-          <img src="/urgent-logo-clean.png" alt="Urgent Couriers" className="h-10 mb-2" />
+          <h1 className="text-xl font-bold text-[#FFD200]">Urgent Couriers</h1>
           <p className="text-sm text-gray-400">Recruitment Portal</p>
         </div>
         <nav className="flex-1 px-4">

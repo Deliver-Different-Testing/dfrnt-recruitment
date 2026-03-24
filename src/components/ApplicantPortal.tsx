@@ -528,7 +528,7 @@ function StatusCheck() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#0d0c2c] text-white py-6 px-8 flex items-center gap-4">
-        <img src="/urgent-logo.png" alt="Urgent Couriers" className="h-14" />
+        
       </header>
       <div className="max-w-xl mx-auto py-8 px-4">
         <h2 className="text-xl font-semibold mb-4">Check Application Status</h2>
@@ -585,7 +585,7 @@ function LandingPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto py-8 px-4">
         <div className="bg-[#0d0c2c] rounded-2xl p-8 mb-8">
-          <img src="/urgent-logo.png" alt="Urgent Couriers" className="h-12 mb-6" />
+          
           <h1 className="text-3xl font-bold text-white mb-2">{config?.welcomeTitle || 'Join Our Team'}</h1>
           <p className="text-gray-400">{config?.welcomeSubtitle || "We're looking for reliable courier drivers across New Zealand."}</p>
         </div>
