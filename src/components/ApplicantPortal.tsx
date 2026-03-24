@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import * as api from '../lib/api'
-import { Upload, CheckCircle, XCircle, Clock, FileText, AlertCircle } from 'lucide-react'
+import { Upload, CheckCircle, XCircle, Clock, FileText, AlertCircle, CreditCard, Car, Shield, FileCheck, Building, Hash } from 'lucide-react'
 
 const steps = ['Personal Details', 'Vehicle & License', 'Documents', 'Quiz', 'Confirmation']
 
@@ -603,10 +603,79 @@ function StatusCheck() {
   )
 }
 
+const docRequirements = [
+  { icon: CreditCard, title: "Driver's License", required: true, desc: "Upload a clear photo of front and back." },
+  { icon: Car, title: "Vehicle Registration", required: true, desc: "Current registration document." },
+  { icon: Shield, title: "Vehicle Insurance", required: false, desc: "Basic vehicle insurance — third party or comprehensive." },
+  { icon: FileCheck, title: "WOF Certificate", required: true, desc: "Current Warrant of Fitness." },
+  { icon: Building, title: "TSL Certificate", required: false, desc: "Transport Service License (if applicable)." },
+  { icon: Hash, title: "IRD Number", required: false, desc: "For tax and payment setup." },
+]
+
+function LandingPage() {
+  const navigate = useNavigate()
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-2xl mx-auto py-8 px-4">
+        {/* Hero */}
+        <div className="bg-[#0d0c2c] rounded-2xl p-8 mb-8">
+          <img src="/urgent-logo.png" alt="Urgent Couriers" className="h-12 mb-6" />
+          <h1 className="text-3xl font-bold text-white mb-2">Join Our Team</h1>
+          <p className="text-gray-400">We're looking for reliable courier drivers across New Zealand.</p>
+        </div>
+
+        {/* What you'll need */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-[#0d0c2c] mb-4">What you'll need to apply</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {docRequirements.map((doc, i) => (
+              <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                  <doc.icon size={20} className="text-[#0d0c2c]" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-sm text-[#0d0c2c]">{doc.title}</span>
+                    {doc.required && <span className="text-xs text-red-500 font-medium">Required</span>}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-0.5">{doc.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick & Easy banner */}
+        <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex items-start gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0">
+            <Clock size={20} className="text-green-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-sm text-[#0d0c2c]">Quick & Easy — About 5 minutes</p>
+            <p className="text-xs text-green-700 mt-0.5">Take photos of your documents with your phone camera. Upload them directly from your device.</p>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <button onClick={() => navigate('/apply/form')}
+          className="w-full sm:w-auto bg-[#FFD200] text-[#0d0c2c] px-8 py-3.5 rounded-xl font-bold text-lg hover:bg-[#E87C1E] hover:text-white transition-colors shadow-sm">
+          Start Application →
+        </button>
+
+        <p className="text-sm text-gray-400 mt-4">
+          Already applied? <a href="/apply/status" className="text-[#E87C1E] underline font-medium">Check your status</a>
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function ApplicantPortal() {
   return (
     <Routes>
-      <Route index element={<ApplyFlow />} />
+      <Route index element={<LandingPage />} />
+      <Route path="form" element={<ApplyFlow />} />
       <Route path="status" element={<StatusCheck />} />
       <Route path="status/:email" element={<StatusCheck />} />
     </Routes>
