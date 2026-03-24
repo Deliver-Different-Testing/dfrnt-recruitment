@@ -18,6 +18,16 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   return text ? JSON.parse(text) : ({} as T);
 }
 
+// Portal config (public)
+export interface PortalConfig {
+  companyName: string; welcomeTitle: string; welcomeSubtitle: string;
+  showVehicleStep: boolean; showQuizStep: boolean; primaryColor: string;
+  documentTypes: DocumentType[]; quiz: Quiz | null;
+}
+export const getPortalConfig = () => request<PortalConfig>('/settings/portal');
+export const getSettings = () => request<any>('/settings');
+export const updateSettings = (data: any) => request<any>('/settings', { method: 'PUT', body: JSON.stringify(data) });
+
 // Auth
 export const login = (username: string, password: string) =>
   request<{ token: string; user: { username: string; role: string } }>('/auth/login', {

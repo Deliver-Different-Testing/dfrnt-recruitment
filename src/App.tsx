@@ -5,6 +5,7 @@ import RecruitmentPipeline from './components/RecruitmentPipeline'
 import DocumentManagement from './components/DocumentManagement'
 import QuizBuilder from './components/QuizBuilder'
 import Dashboard from './components/Dashboard'
+import PortalSettings from './components/PortalSettings'
 import { useStore } from './store'
 import { useState } from 'react'
 import * as api from './lib/api'
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="pipeline" element={<RecruitmentPipeline />} />
         <Route path="documents" element={<DocumentManagement />} />
         <Route path="quizzes" element={<QuizBuilder />} />
+        <Route path="settings" element={<PortalSettings />} />
       </Route>
       <Route path="*" element={<Navigate to="/apply" />} />
     </Routes>
