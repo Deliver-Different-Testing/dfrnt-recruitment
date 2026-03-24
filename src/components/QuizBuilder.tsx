@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import * as api from '../lib/api'
 import { useStore } from '../store'
-import { Plus, Save, Trash2 } from 'lucide-react'
+import { Plus, Save } from 'lucide-react'
 
 export default function QuizBuilder() {
   const quizzes = useStore(s => s.quizzes)

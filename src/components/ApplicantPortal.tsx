@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import * as api from '../lib/api'
 import { useStore } from '../store'
 
@@ -10,8 +10,6 @@ function ApplyFlow() {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', address: '', city: '', region: '', source: '', vehicleType: '', hasOwnVehicle: false, licenseType: '', licenseExpiry: '' })
   const [submitted, setSubmitted] = useState(false)
   const setCurrentApplicantId = useStore(s => s.setCurrentApplicantId)
-  const currentApplicantId = useStore(s => s.currentApplicantId)
-
   const update = (field: string, value: string | boolean) => setForm(f => ({ ...f, [field]: value }))
 
   const handleSubmitApplication = async () => {

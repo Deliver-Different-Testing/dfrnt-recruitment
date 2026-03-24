@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
-import { Users, FileText, HelpCircle, LogOut, LayoutDashboard } from 'lucide-react'
+import { FileText, HelpCircle, LogOut, LayoutDashboard } from 'lucide-react'
 
 const navItems = [
   { to: '/admin/pipeline', label: 'Pipeline', icon: LayoutDashboard },
