@@ -579,7 +579,17 @@ function LandingPage() {
 
   if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 size={32} className="animate-spin text-gray-400" /></div>
 
-  const docIcons = [CreditCard, Car, Shield, FileCheck, Building, Hash, FileText, FileText]
+  // Build the same dynamic steps the applicant will see
+  const flowSteps: { icon: typeof FileText; label: string; description?: string; required?: boolean }[] = []
+  if (config) {
+    flowSteps.push({ icon: FileText, label: 'Your Details', description: 'Name, email, phone & address' })
+    if (config.showVehicleStep) flowSteps.push({ icon: Car, label: 'Vehicle & License', description: 'Vehicle type, make/model & license details' })
+    for (const dt of config.documentTypes) {
+      const docIcons = [CreditCard, Car, Shield, FileCheck, Building, Hash, FileText, FileText]
+      flowSteps.push({ icon: docIcons[flowSteps.length % docIcons.length], label: dt.name, description: dt.description || undefined, required: dt.isRequired })
+    }
+    if (config.showQuizStep && config.quiz) flowSteps.push({ icon: CheckCircle, label: 'Assessment Quiz', description: config.quiz.title || 'Quick knowledge check' })
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -590,21 +600,21 @@ function LandingPage() {
           <p className="text-gray-400">{config?.welcomeSubtitle || "We're looking for reliable courier drivers across New Zealand."}</p>
         </div>
 
-        {config && config.documentTypes.length > 0 && (
+        {flowSteps.length > 0 && (
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-[#0d0c2c] mb-4">What you'll need to apply</h2>
             <div className="grid grid-cols-2 gap-3">
-              {config.documentTypes.map((dt, i) => {
-                const Icon = docIcons[i % docIcons.length]
+              {flowSteps.map((step, i) => {
+                const Icon = step.icon
                 return (
-                  <div key={dt.id} className="bg-white rounded-xl p-4 border border-gray-100 flex items-start gap-3">
+                  <div key={i} className="bg-white rounded-xl p-4 border border-gray-100 flex items-start gap-3">
                     <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0"><Icon size={20} className="text-[#0d0c2c]" /></div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm text-[#0d0c2c]">{dt.name}</span>
-                        {dt.isRequired && <span className="text-xs text-red-500 font-medium">Required</span>}
+                        <span className="font-semibold text-sm text-[#0d0c2c]">{step.label}</span>
+                        {step.required && <span className="text-xs text-red-500 font-medium">Required</span>}
                       </div>
-                      {dt.description && <p className="text-xs text-gray-500 mt-0.5">{dt.description}</p>}
+                      {step.description && <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>}
                     </div>
                   </div>
                 )
@@ -615,7 +625,7 @@ function LandingPage() {
 
         <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex items-start gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center shrink-0"><Clock size={20} className="text-green-600" /></div>
-          <div><p className="font-semibold text-sm text-[#0d0c2c]">Quick & Easy — About 5 minutes</p><p className="text-xs text-green-700 mt-0.5">Take photos of your documents with your phone camera. Upload them directly.</p></div>
+          <div><p className="font-semibold text-sm text-[#0d0c2c]">Quick & Easy — About {flowSteps.length + 1} steps</p><p className="text-xs text-green-700 mt-0.5">Take photos of your documents with your phone camera. Upload them directly.</p></div>
         </div>
 
         <button onClick={() => navigate('/apply/form')}
